@@ -6,6 +6,20 @@
 #include <fstream>
 
 #define all(v) v.begin(),v.end()
+#define eps 1e-6
+
+class DoubleOps {
+
+public:
+
+    bool isEqual(const double a, const double b) {
+        return isZero(a-b);
+    }
+
+    bool isZero(const double num) {
+        return abs(num) < eps;
+    }
+};
 
 class StringManipulation {
 

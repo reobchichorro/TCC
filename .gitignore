@@ -4,3 +4,4 @@ DEM-IBGE/
 Template_SBC/
 *.o
 *.out
+*.txt

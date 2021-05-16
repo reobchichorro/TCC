@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <map>
 #include <fstream>
-#include "../Utils/str_manipulation.cpp"
+#include "../Utils/Utils.cpp"
 
 #define eps 1e-6
 #define all(v) v.begin(),v.end()
@@ -18,6 +18,7 @@ public:
     double x;
     double y;
     double z;
+    DoubleOps op;
 
     xyz() {}
 
@@ -27,7 +28,8 @@ public:
 
     double diff(const xyz& other) {
         xyz diff(other.x - x, other.y - y, other.z - z);
-        if (abs(diff.x) < eps || abs(diff.x) > abs(diff.y))
+
+        if (op.isZero(diff.x) || abs(diff.x) > abs(diff.y))
             return abs(diff.y);
         return abs(diff.x);
     }
@@ -44,6 +46,9 @@ public:
         z = std::max(z, other.z);
     }
 
+    bool operator<(const xyz& other) {
+        return op.isEqual(x, other.x) ? (y < other.y) : (x < other.x);
+    }
 };
 
 class Terrain {
@@ -56,6 +61,9 @@ public:
     std::vector<std::vector<double> > height;
     std::unordered_map<double, int> horizontal_index;
     std::unordered_map<double, int> vertical_index;
+
+    const int interval = 20;
+    DoubleOps op;
 
     Terrain() {
         name = "";
@@ -75,24 +83,15 @@ public:
         std::stringstream ss;
         std::vector<xyz> all_points;
         double x,y,z;
-        // int i = 0;
 
         while(getline(file,line)) {
             std::replace(all(line), ',', ' ');
             ss.str(line);
             ss >> x >> y >> z;
-            // std::cout << x << " " << y << " " << z << "\n";
             all_points.push_back(xyz(x,y,z));
-            // i++;
         }
 
-        double diff = all_points[1].diff(all_points[0]);
-        double temp = 0.0;
-        for(int i=1; i<all_points.size()-1; i++) {
-            temp = all_points[i+1].diff(all_points[i]);
-            if (abs(temp-diff) > eps)
-                std::cerr << i << " " << temp << " " << diff << "\n";
-        }
+        std::sort(all(all_points));
 
         xyz smallest=all_points[0], largest=all_points[0];
         std::vector<std::pair<xyz,xyz> > line_limit_points;
@@ -103,7 +102,7 @@ public:
             smallest.take_min(all_points[i]);
             largest.take_max(all_points[i]);
 
-            if(abs(line_x - all_points[i].x) > eps) {
+            if(!op.isEqual(line_x, all_points[i].x)) {
                 line_limit_points.push_back(std::pair<xyz,xyz>(all_points[i],all_points[i]));
                 line_x = all_points[i].x;
             } else {
@@ -113,13 +112,18 @@ public:
 
             keys[i].first = (int) all_points[i].x;
             keys[i].second = (int) all_points[i].y;
+
+            if(keys[i].first % interval <= interval/2)
+                keys[i].first -= (keys[i].first % interval);
+            else
+                keys[i].first += interval - (keys[i].first % interval);
+            
+            if(keys[i].second % interval <= interval/2)
+                keys[i].second -= (keys[i].second % interval);
+            else
+                keys[i].second += interval - (keys[i].second % interval);
+
             if(x_counter.find(keys[i].first) != x_counter.end()) {
-                x_counter[keys[i].first]++;
-            } else if(x_counter.find(keys[i].first-1) != x_counter.end()) {
-                keys[i].first--;
-                x_counter[keys[i].first-1]++;
-            } else if(x_counter.find(keys[i].first+1) != x_counter.end()) {
-                keys[i].first++;
                 x_counter[keys[i].first]++;
             } else {
                 x_counter[keys[i].first] = 1;
@@ -127,30 +131,10 @@ public:
 
             if(y_counter.find(keys[i].second) != y_counter.end()) {
                 y_counter[keys[i].second]++;
-            } else if(y_counter.find(keys[i].second-1) != y_counter.end()) {
-                keys[i].second--;
-                y_counter[keys[i].second]++;
-            } else if(y_counter.find(keys[i].second+1) != y_counter.end()) {
-                keys[i].second++;
-                y_counter[keys[i].second]++;
             } else {
                 y_counter[keys[i].second] = 1;
             }
         }
-
-        std::vector<std::pair<xyz,xyz> > column_limit_points;
-
-        for(int i=0; i<line_limit_points.size(); i++) {
-            std::cerr << line_limit_points[i].first.x << "," << line_limit_points[i].first.y << " - " << line_limit_points[i].second.x << "," << line_limit_points[i].second.y << "\n";
-        }
-
-        // for (auto &p: x_counter) {
-        //     std::cout << p.first << " - " << p.second << "\n";
-        // }
-        // std::cout << "here\n";
-        // for (auto &p: y_counter) {
-        //     std::cout << p.first << " - " << p.second << "\n";
-        // }
 
         std::map<int,int> x_counter2, y_counter2;
         for (auto &p: x_counter) {
@@ -167,13 +151,7 @@ public:
                 y_counter2[p.second] = 1;
             }
         }
-        // for (auto &p: x_counter2) {
-        //     std::cerr << p.first << " - " << p.second << "\n";
-        // }
-        // std::cout << "here\n";
-        // for (auto &p: y_counter2) {
-        //     std::cerr << p.first << " - " << p.second << "\n";
-        // }
+        
         std::cerr << line_limit_points.size() << "\n";
         
         std::pair<int,int> smallest_key = {x_counter.begin()->second, y_counter.begin()->second}, largest_key = {x_counter.rbegin()->second, y_counter.begin()->second};
@@ -182,11 +160,24 @@ public:
         std::unordered_map<int, int> xindex, yindex;
 
         int xpos = 0, ypos = 0;
+        int previousx, previousy;
         for(auto itx=x_counter.cbegin(); itx!=x_counter.cend(); itx++, xpos++) {
+            if(itx != x_counter.cbegin() && itx->first - previousx > 20) {
+                xindex[previousx+20] = xpos;
+                xpos++;
+                std::cerr << itx->first << " " << previousx << " " << xpos << "\n";
+            }
             xindex[itx->first] = xpos;
+            previousx = itx->first;
         }
         for(auto ity=y_counter.cbegin(); ity!=y_counter.cend(); ity++, ypos++) {
+            if(ity != y_counter.cbegin() && ity->first - previousy > 20) {
+                yindex[previousy+20] = ypos;
+                ypos++;
+                std::cerr << ity->first << " " << previousy << " " << ypos << "\n";
+            }
             yindex[ity->first] = ypos;
+            previousy = ity->first;
         }
 
         for(int pos = 0; pos < all_points.size(); pos++) {
@@ -197,18 +188,6 @@ public:
             vertical_index[all_points[pos].y] = j;
         }
         xpos = 0, ypos = 0;
-        // for(auto itx=x_counter.cbegin(); itx!=x_counter.cend(); itx++, xpos++) {
-        //     ypos = 0;
-        //     for(auto ity=y_counter.cbegin(); ity!=y_counter.cend(); ity++, ypos++) {
-        //         std::pair<int,int> coords(itx->first, ity->first);
-        //         // std::find(keys.begin(), keys.end(), coords);
-        //         auto itkey = std::find(all(keys), coords);
-        //         int pos = itkey - keys.cbegin();
-        //         height[xpos][ypos] = all_points[pos].z;
-        //         horizontal_index[all_points[pos].x] = xpos;
-        //         vertical_index[all_points[pos].y] = ypos;
-        //     }
-        // }
 
         int digits = (int) largest.z >= 1000 ? 4 : 3;
         for(int i=0; i<height.size(); i++) {
