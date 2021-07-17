@@ -8,6 +8,7 @@
 #include <map>
 #include <fstream>
 #include "../Utils/Utils.cpp"
+#include "../Data/GuardType.cpp"
 
 #define eps 1e-6
 #define all(v) v.begin(),v.end()
@@ -60,7 +61,7 @@ public:
     std::vector<double> radiuses;
     std::vector<double> angles;
     std::vector<int> icosts;
-    std::vector<int> mcosts;
+    std::vector<double> mcosts;
 
     std::vector<int> amounts;
 
@@ -111,4 +112,13 @@ public:
         }
     }
     
+    const GuardType& create_GuardType(const int name, const int height, const int radius, const int angle, const int icost, const int mcost, const int amount) {
+        return GuardType(names[name], heights[height], radiuses[radius], angles[angle], icosts[icost], mcosts[mcost], amounts[amount]);
+    }
+
+    const void print_GuardType(std::ofstream& file, const int name, const int height, const int radius, const int angle, const int icost, const int mcost, const int amount) {
+        
+        file << names[name] << '\t' << heights[height] << '\t' << radiuses[radius] << '\t' << angles[angle] << '\t' << icosts[icost] << '\t' << mcosts[mcost] << '\t' << amounts[amount] << '\n';
+        
+    }
 };

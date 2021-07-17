@@ -60,7 +60,7 @@ public:
     double radius;
     double angle;
     int icost;
-    int mcost;
+    double mcost;
 
     int amount;
 
@@ -74,6 +74,18 @@ public:
         mcost = 0;
 
         amount = 0;
+    }
+
+    GuardType(const std::string& name, const double height, const double radius, const double angle, const int icost, const double mcost, const int amount) {
+        this->name = name;
+
+        this->height = height;
+        this->radius = radius;
+        this->angle = angle;
+        this->icost = icost;
+        this->mcost = mcost;
+
+        this->amount = amount;
     }
 
     
