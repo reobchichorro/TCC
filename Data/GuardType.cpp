@@ -12,45 +12,6 @@
 #define eps 1e-6
 #define all(v) v.begin(),v.end()
 
-// class xyz {
-
-// public:
-//     double x;
-//     double y;
-//     double z;
-//     DoubleOps op;
-
-//     xyz() {}
-
-//     xyz(const double xx, const double yy, const double zz) {
-//         x = xx; y = yy; z = zz;
-//     }
-
-//     double diff(const xyz& other) {
-//         xyz diff(other.x - x, other.y - y, other.z - z);
-
-//         if (op.isZero(diff.x) || abs(diff.x) > abs(diff.y))
-//             return abs(diff.y);
-//         return abs(diff.x);
-//     }
-
-//     void take_min(const xyz& other) {
-//         x = std::min(x, other.x);
-//         y = std::min(y, other.y);
-//         z = std::min(z, other.z);
-//     }
-
-//     void take_max(const xyz& other) {
-//         x = std::max(x, other.x);
-//         y = std::max(y, other.y);
-//         z = std::max(z, other.z);
-//     }
-
-//     bool operator<(const xyz& other) {
-//         return op.isEqual(x, other.x) ? (y < other.y) : (x < other.x);
-//     }
-// };
-
 class GuardType {
 
 public:
@@ -88,5 +49,15 @@ public:
         this->amount = amount;
     }
 
-    
+    void read_file(const std::string& path, const std::string& filename) {
+        std::ifstream guardtypefile(path + filename);
+        guardtypefile >> name;
+        guardtypefile >> height;
+        guardtypefile >> radius;
+        guardtypefile >> angle;
+        guardtypefile >> icost;
+        guardtypefile >> mcost;
+
+        guardtypefile >> amount;
+    }
 };

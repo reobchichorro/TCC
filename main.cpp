@@ -38,6 +38,21 @@ void read_file(const std::string& path, const std::string& filename, InputFileDa
     }
 }
 
+void read_guardtypelist_file(const std::string& path, const std::string& filename, std::vector<GuardType>& guardtypes) {
+    std::string guardtype_abspath;
+    int n;
+    std::ifstream guardtypelistfile(path + filename);
+    guardtypelistfile >> guardtype_abspath;
+    guardtypelistfile >> n;
+    guardtypes.resize(n);
+    
+    std::string guardtype_filename;
+    for(int i=0; i<n; i++) {
+        guardtypelistfile >> guardtype_filename;
+        guardtypes[i].read_file(guardtype_abspath, guardtype_filename);
+    }
+}
+
 int main() {
     std::string path, filename;
     std::cin >> path >> filename;
@@ -61,4 +76,5 @@ int main() {
     // std::cout << "\n";
 
     dem.read_file(input.dem_abspath, input.dem_filename, input.resolution);
+    read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types);
 }

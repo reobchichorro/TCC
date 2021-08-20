@@ -100,10 +100,7 @@ public:
             while(ss >> point_height) {
                 height[i].push_back(point_height);
             }
-            std::cout << i << " " << height[i].size() << "\n";
             i++;
         }
-
-        test();
     }
 };
