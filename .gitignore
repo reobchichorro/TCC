@@ -3,6 +3,7 @@ Artigos/
 DEM-IBGE/
 Inputs/
 Template_SBC/
+site/
 *.o
 *.out
 *.txt
