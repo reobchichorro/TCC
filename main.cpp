@@ -1,29 +1,31 @@
 #include <iostream>
 #include <string>
-#include "Data/Terrain.cpp"
-#include "Data/GuardType.cpp"
-// #include "Utils/Utils.cpp"
+#include "Classes/Terrain.h"
+#include "Classes/GuardType.h"
+#include "Classes/Situation.h"
+#include "Utils/Utils.h"
 
-// DoubleOps op;
+typedef std::string str;
+
+str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 
 struct InputFileData {
-    std::string dem_abspath;
-    std::string dem_filename;
-    int resolution;
-    std::string guardtypelist_abspath;
-    std::string guardtypelist_filename;
+    str test_case_name;
+    str shedbin_folder;
+    str guardtypelist_abspath;
+    str guardtypelist_filename;
     std::vector<bool> obj_bitlist;
     std::vector<bool> rest_bitlist;
 };
 
-void read_file(const std::string& path, const std::string& filename, InputFileData& input) {
+void read_file(const str& path, const str& filename, InputFileData& input) {
     input.obj_bitlist.resize(5);
     input.rest_bitlist.resize(2);
 
     std::ifstream inputfile(path + filename);
-    inputfile >> input.dem_abspath;
-    inputfile >> input.dem_filename;
-    inputfile >> input.resolution;
+    inputfile >> input.test_case_name;
+    inputfile >> input.shedbin_folder;
+
     inputfile >> input.guardtypelist_abspath;
     inputfile >> input.guardtypelist_filename;
     for(int i=0; i<5; i++) {
@@ -38,15 +40,15 @@ void read_file(const std::string& path, const std::string& filename, InputFileDa
     }
 }
 
-void read_guardtypelist_file(const std::string& path, const std::string& filename, std::vector<GuardType>& guardtypes) {
-    std::string guardtype_abspath;
+void read_guardtypelist_file(const str& path, const str& filename, std::vector<GuardType>& guardtypes) {
+    str guardtype_abspath;
     int n;
     std::ifstream guardtypelistfile(path + filename);
     guardtypelistfile >> guardtype_abspath;
     guardtypelistfile >> n;
     guardtypes.resize(n);
     
-    std::string guardtype_filename;
+    str guardtype_filename;
     for(int i=0; i<n; i++) {
         guardtypelistfile >> guardtype_filename;
         guardtypes[i].read_file(guardtype_abspath, guardtype_filename);
@@ -54,27 +56,19 @@ void read_guardtypelist_file(const std::string& path, const std::string& filenam
 }
 
 int main() {
-    std::string path, filename;
+    str path, filename;
     std::cin >> path >> filename;
     InputFileData input;
     read_file(path, filename, input);
     Terrain dem;
     std::vector<GuardType> guard_types;
 
-    // std::cout << input.dem_abspath << " ";
-    // std::cout << input.dem_filename << "\n";
-    // std::cout << input.resolution << "\n";
-    // std::cout << input.guardtypelist_abspath << " ";
-    // std::cout << input.guardtypelist_filename << "\n";
-    // for(int i=0; i<5; i++) {
-    //     std::cout << input.obj_bitlist[i] << " ";
-    // }
-    // std::cout << "\n";
-    // for(int i=0; i<2; i++) {
-    //     std::cout << input.rest_bitlist[i] << " ";
-    // }
-    // std::cout << "\n";
-
-    dem.read_file(input.dem_abspath, input.dem_filename, input.resolution);
+    dem.read_file(site_folder, input.test_case_name, input.shedbin_folder);
     read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types);
+
+    // Intersection calculate_angle;
+    // calculate_angle.fill_view_angle(dem);
+
+    Situation currSit(dem);
+    currSit.calculate_possibilities(guard_types);
 }
