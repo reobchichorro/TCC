@@ -152,8 +152,11 @@ void Situation::calculate_possibilities(std::vector<GuardType>& guard_types) {
     for(const Observer& position: dem->best_observers) {
         for(GuardType& guard_type: guard_types) {
             GuardPos possibility(guard_type, position, covered);
-            for(int angle: angles) {
-                possibilities.push_back(NewAlloc(angle, possibility, covered));
+            if(guard_type.angle == 360)
+                possibilities.push_back(NewAlloc(0, possibility, covered));
+            else {
+                for(int angle: angles)
+                    possibilities.push_back(NewAlloc(angle, possibility, covered));
             }
         }
     }
