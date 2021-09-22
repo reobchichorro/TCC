@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <unordered_map>
 #include <map>
@@ -18,7 +19,7 @@
 typedef std::string str;
 typedef std::pair<int, int> pii;
 
-Observer::Observer(str& point_name, const std::filesystem::path& path, const int nrows) {
+Observer::Observer(str& point_name, const std::filesystem::path& path, const int nrows, const std::set<int>& guard_radii) {
     point_name.erase(0, 1);
     auto pos = point_name.find('y');
     point_name.replace(pos, 1, " ");
@@ -42,8 +43,8 @@ Observer::Observer(str& point_name, const std::filesystem::path& path, const int
         }
     }
 
-    limits_row = std::vector<std::vector<pii> >(6);
-    limits_col = std::vector<std::vector<pii> >(6);
+    limits_row = std::map<int, std::vector<pii> >();
+    limits_col = std::map<int, std::vector<pii> >();
     
     int dist = 0, dist2 = 0;
     int deltax, deltay;
@@ -51,12 +52,12 @@ Observer::Observer(str& point_name, const std::filesystem::path& path, const int
     int ans1, ans2;
     int start, stop;
 
-    for(int a=0; a<5; a++) {
-        dist = (a+1)*5*nrows/100; dist2 = dist*dist;
+    for(int radius: guard_radii) {
+        dist = radius*nrows/100; dist2 = dist*dist;
         start = std::max(0, x - dist);
         stop = std::min(nrows-1, x + dist);
 
-        limits_row[a] = std::vector<pii>(stop-start+1);
+        limits_row[radius] = std::vector<pii>(stop-start+1);
 
         for(int i=start; i<=stop; i++) {
             deltax = x - i;
@@ -65,13 +66,13 @@ Observer::Observer(str& point_name, const std::filesystem::path& path, const int
             ans2 = std::max(0, (int)std::ceil(y - root));
             ans1 = std::min(nrows-1, (int)std::floor(y + root));
 
-            limits_row[a][i-start] = {ans2, ans1};
+            limits_row[radius][i-start] = {ans2, ans1};
         }
 
         start = std::max(0, y - dist);
         stop = std::min(nrows-1, y + dist);
 
-        limits_col[a] = std::vector<pii>(stop-start+1);
+        limits_col[radius] = std::vector<pii>(stop-start+1);
 
         for(int j=start; j<=stop; j++) {
             deltay = y - j;
@@ -80,42 +81,75 @@ Observer::Observer(str& point_name, const std::filesystem::path& path, const int
             ans2 = std::max(0, (int)std::ceil(x - root));
             ans1 = std::min(nrows-1, (int)std::floor(x + root));
 
-            limits_col[a][j-start] = {ans2, ans1};
+            limits_col[radius][j-start] = {ans2, ans1};
         }
     }
 
-    {
-        dist = nrows/2; dist2 = dist*dist;
-        start = std::max(0, x - dist);
-        stop = std::min(nrows-1, x + dist);
+    // for(int a=0; a<5; a++) {
+    //     dist = (a+1)*5*nrows/100; dist2 = dist*dist;
+    //     start = std::max(0, x - dist);
+    //     stop = std::min(nrows-1, x + dist);
 
-        limits_row[5] = std::vector<pii>(stop-start+1);
+    //     limits_row[a] = std::vector<pii>(stop-start+1);
 
-        for(int i=start; i<=stop; i++) {
-            deltax = x - i;
-            root = sqrt(dist2 - deltax*deltax);
+    //     for(int i=start; i<=stop; i++) {
+    //         deltax = x - i;
+    //         root = sqrt(dist2 - deltax*deltax);
 
-            ans2 = std::max(0, (int)std::ceil(y - root));
-            ans1 = std::min(nrows-1, (int)std::floor(y + root));
+    //         ans2 = std::max(0, (int)std::ceil(y - root));
+    //         ans1 = std::min(nrows-1, (int)std::floor(y + root));
 
-            limits_row[5][i-start] = {ans2, ans1};
-        }
+    //         limits_row[a][i-start] = {ans2, ans1};
+    //     }
 
-        start = std::max(0, y - dist);
-        stop = std::min(nrows-1, y + dist);
+    //     start = std::max(0, y - dist);
+    //     stop = std::min(nrows-1, y + dist);
 
-        limits_col[5] = std::vector<pii>(stop-start+1);
+    //     limits_col[a] = std::vector<pii>(stop-start+1);
 
-        for(int j=start; j<=stop; j++) {
-            deltay = y - j;
-            root = sqrt(dist2 - deltay*deltay);
+    //     for(int j=start; j<=stop; j++) {
+    //         deltay = y - j;
+    //         root = sqrt(dist2 - deltay*deltay);
 
-            ans2 = std::max(0, (int)std::ceil(x - root));
-            ans1 = std::min(nrows-1, (int)std::floor(x + root));
+    //         ans2 = std::max(0, (int)std::ceil(x - root));
+    //         ans1 = std::min(nrows-1, (int)std::floor(x + root));
 
-            limits_col[5][j-start] = {ans2, ans1};
-        }
-    }
+    //         limits_col[a][j-start] = {ans2, ans1};
+    //     }
+    // }
+
+    // {
+    //     dist = nrows/2; dist2 = dist*dist;
+    //     start = std::max(0, x - dist);
+    //     stop = std::min(nrows-1, x + dist);
+
+    //     limits_row[5] = std::vector<pii>(stop-start+1);
+
+    //     for(int i=start; i<=stop; i++) {
+    //         deltax = x - i;
+    //         root = sqrt(dist2 - deltax*deltax);
+
+    //         ans2 = std::max(0, (int)std::ceil(y - root));
+    //         ans1 = std::min(nrows-1, (int)std::floor(y + root));
+
+    //         limits_row[5][i-start] = {ans2, ans1};
+    //     }
+
+    //     start = std::max(0, y - dist);
+    //     stop = std::min(nrows-1, y + dist);
+
+    //     limits_col[5] = std::vector<pii>(stop-start+1);
+
+    //     for(int j=start; j<=stop; j++) {
+    //         deltay = y - j;
+    //         root = sqrt(dist2 - deltay*deltay);
+
+    //         ans2 = std::max(0, (int)std::ceil(x - root));
+    //         ans1 = std::min(nrows-1, (int)std::floor(x + root));
+
+    //         limits_col[5][j-start] = {ans2, ans1};
+    //     }
+    // }
 }
 
 Terrain::Terrain() {
@@ -142,7 +176,7 @@ void Terrain::test() {
     }
 }
 
-void Terrain::read_file(const str& site_folder, const str& test_case_name, const str& shedbin_folder) {
+void Terrain::read_file(const str& site_folder, const str& test_case_name) {
     name = test_case_name;
     
     std::ifstream file_elsize(site_folder + test_case_name + "/elsize");
@@ -170,10 +204,12 @@ void Terrain::read_file(const str& site_folder, const str& test_case_name, const
             }
         }
     }
+}
 
+void Terrain::fill_best_observers(const str& site_folder, const str& test_case_name, const str& shedbin_folder, const std::set<int>& guard_radii) {
     str point_name;
     for(const auto& file: std::filesystem::directory_iterator(site_folder + test_case_name + "/" + shedbin_folder)) {
         point_name = file.path().filename();
-        best_observers.push_back(Observer(point_name, file.path(), nrows));
+        best_observers.push_back(Observer(point_name, file.path(), nrows, guard_radii));
     }
 }

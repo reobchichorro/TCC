@@ -34,10 +34,19 @@ Allocation::Allocation(const int angle, GuardType& guard_type, const Observer& p
     this->angle = angle;
 }
 
-NewAlloc::NewAlloc(const int angle, GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered) {
-    alloc = Allocation(angle, guard_type, position);
+Allocation::Allocation(const int angle, GuardType* guard_type, const int x, const int y) {
+    this->guard = guard_type;
+    this->x = x;
+    this->y = y;
+    this->angle = angle;
+}
 
-    int radius_index = guard_type.radius/5 - 1;
+GuardPos::GuardPos(GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered) {
+    this->guard = &guard_type;
+    this->x = position.x; this->y = position.y;
+    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315
+
+    // int radius_index = guard_type.radius/5 - 1;
 
     // position.limits_row[radius_index]
     // position.limits_col[radius_index]
@@ -47,15 +56,59 @@ NewAlloc::NewAlloc(const int angle, GuardType& guard_type, const Observer& posit
     int stop = std::min((int)covered.size()-1, position.x + radius);
     int i = start;
 
-    int angle_min = angle;
-    int angle_max = (angle+guard_type.angle)%360;
-
-    for(int line=0; line<position.limits_row[radius_index].size(); line++, i++) {
-        for(int j=position.limits_row[radius_index][line].first; j<=position.limits_row[radius_index][line].second; j++) {
+    int ii, jj;
+    
+    for(int line=0; line<position.limits_row.at(guard_type.radius).size(); line++, i++) {
+        for(int j=position.limits_row.at(guard_type.radius)[line].first; j<=position.limits_row.at(guard_type.radius)[line].second; j++) {
+            ii = i - position.x;
+            jj = j - position.y;
             if(!covered[i][j] && position.shed[i][j]) {
-                OF_inc += 1;
+                if(ii <= 0 && jj > 0) {
+                    if(ii > -jj)
+                        sector_covered_points[0]++;
+                    else
+                        sector_covered_points[1]++;
+                } else if(ii < 0 && jj <= 0) {
+                    if(ii < jj)
+                        sector_covered_points[2]++;
+                    else
+                        sector_covered_points[3]++;
+                } else if(ii >= 0 && jj < 0) {
+                    if(ii < -jj)
+                        sector_covered_points[4]++;
+                    else
+                        sector_covered_points[5]++;
+                } else if(ii > 0 && jj >= 0) {
+                    if(ii > jj)
+                        sector_covered_points[6]++;
+                    else
+                        sector_covered_points[7]++;
+                }
             }
         }
+    }
+}
+
+NewAlloc::NewAlloc(const int angle, GuardPos& guardPos, const std::vector<std::vector<bool> >& covered) {
+    alloc = Allocation(angle, guardPos.guard, guardPos.x, guardPos.y);
+    OF_inc = 0;
+
+    // int radius_index = guard_type.radius/5 - 1;
+
+    // position.limits_row[radius_index]
+    // position.limits_col[radius_index]
+
+    int angle_min = angle/45;
+    int angle_max = ((angle + guardPos.guard->angle)%360)/45;
+
+    if(angle_min < angle_max) {
+        for(int i = angle_min; i<angle_max; i++)
+            OF_inc += guardPos.sector_covered_points[i];
+    } else {
+        for(int i = angle_min; i<8; i++)
+            OF_inc += guardPos.sector_covered_points[i];
+        for(int i = 0; i<angle_max; i++)
+            OF_inc += guardPos.sector_covered_points[i];
     }
 
     // double max_radius = guard_type.radius * ((int)position.shed.size());
@@ -68,6 +121,14 @@ NewAlloc::NewAlloc(const int angle, GuardType& guard_type, const Observer& posit
     //         }
     //     }
     // }
+}
+
+bool NewAlloc::operator<(const NewAlloc& other) const {
+    return this->OF_inc < other.OF_inc;
+}
+
+long long int NewAlloc::operator-(const NewAlloc& other) {
+    return this->OF_inc - other.OF_inc;
 }
 
 Situation::Situation(Terrain& dem) {
@@ -89,9 +150,10 @@ long double Situation::calculate_OF() {
 
 void Situation::calculate_possibilities(std::vector<GuardType>& guard_types) {
     for(const Observer& position: dem->best_observers) {
-        for(int angle: angles) {
-            for(GuardType& guard_type: guard_types) {
-                possibilities.push_back(NewAlloc(0, guard_type, position, covered));
+        for(GuardType& guard_type: guard_types) {
+            GuardPos possibility(guard_type, position, covered);
+            for(int angle: angles) {
+                possibilities.push_back(NewAlloc(angle, possibility, covered));
             }
         }
     }

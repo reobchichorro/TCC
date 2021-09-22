@@ -31,7 +31,20 @@ public:
 
     Allocation();
 
+    Allocation(const int angle, GuardType* guard_type, const int x, const int y);
     Allocation(const int angle, GuardType& guard_type, const Observer& position);
+};
+#endif
+
+#ifndef __GUARDPOS__
+#define __GUARDPOS__
+class GuardPos{
+
+public:
+    int x; int y;
+    GuardType* guard;
+    std::vector<long long int> sector_covered_points;
+    GuardPos(GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered);
 };
 #endif
 
@@ -45,7 +58,10 @@ private:
     long long int OF_inc;
 
 public:
-    NewAlloc(const int angle, GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered);
+    NewAlloc(const int angle, GuardPos& guardPos, const std::vector<std::vector<bool> >& covered);
+    bool operator<(const NewAlloc& other) const;
+    long long int operator-(const NewAlloc& other);
+    // NewAlloc(const int angle, GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered);
 };
 #endif
 
@@ -58,9 +74,9 @@ private:
     std::vector<std::vector<bool> > covered;
     long double OF;
     std::list<Allocation> allocations;
-    std::list<NewAlloc> possibilities;
 
 public:
+    std::list<NewAlloc> possibilities;
     Situation(Terrain& dem);
 
     long double calculate_OF();

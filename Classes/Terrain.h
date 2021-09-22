@@ -3,6 +3,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <set>
+#include <list>
 #include <algorithm>
 #include <unordered_map>
 #include <map>
@@ -26,10 +28,10 @@ public:
 
     std::vector<std::vector<bool> > shed;
 
-    std::vector<std::vector<pii> > limits_row;
-    std::vector<std::vector<pii> > limits_col;
+    std::map<int, std::vector<pii> > limits_row;
+    std::map<int, std::vector<pii> > limits_col;
 
-    Observer(str& point_name, const std::filesystem::path& path, const int nrows);
+    Observer(str& point_name, const std::filesystem::path& path, const int nrows, const std::set<int>& guard_radii);
 };
 #endif
 
@@ -55,6 +57,8 @@ public:
 
     void test();
 
-    void read_file(const str& site_folder, const str& test_case_name, const str& shedbin_folder);
+    void read_file(const str& site_folder, const str& test_case_name);
+
+    void fill_best_observers(const str& site_folder, const str& test_case_name, const str& shedbin_folder, const std::set<int>& guard_radii);
 };
 #endif

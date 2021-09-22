@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <set>
 #include "Classes/Terrain.h"
 #include "Classes/GuardType.h"
 #include "Classes/Situation.h"
@@ -40,7 +41,7 @@ void read_file(const str& path, const str& filename, InputFileData& input) {
     }
 }
 
-void read_guardtypelist_file(const str& path, const str& filename, std::vector<GuardType>& guardtypes) {
+void read_guardtypelist_file(const str& path, const str& filename, std::vector<GuardType>& guardtypes, std::set<int>& guard_radii) {
     str guardtype_abspath;
     int n;
     std::ifstream guardtypelistfile(path + filename);
@@ -52,6 +53,7 @@ void read_guardtypelist_file(const str& path, const str& filename, std::vector<G
     for(int i=0; i<n; i++) {
         guardtypelistfile >> guardtype_filename;
         guardtypes[i].read_file(guardtype_abspath, guardtype_filename);
+        guard_radii.insert(guardtypes[i].radius);
     }
 }
 
@@ -63,12 +65,17 @@ int main() {
     Terrain dem;
     std::vector<GuardType> guard_types;
 
-    dem.read_file(site_folder, input.test_case_name, input.shedbin_folder);
-    read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types);
+    std::set<int> guard_radii;
+
+    dem.read_file(site_folder, input.test_case_name);
+    read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types, guard_radii);
+    dem.fill_best_observers(site_folder, input.test_case_name, input.shedbin_folder, guard_radii);
 
     // Intersection calculate_angle;
     // calculate_angle.fill_view_angle(dem);
 
     Situation currSit(dem);
     currSit.calculate_possibilities(guard_types);
+    currSit.possibilities.sort([](const NewAlloc& a, const NewAlloc& b){return b < a;});
+    std::cout << "Acabou\n";
 }
