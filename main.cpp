@@ -4,6 +4,7 @@
 #include "Classes/Terrain.h"
 #include "Classes/GuardType.h"
 #include "Classes/Situation.h"
+#include "Classes/Solver.h"
 #include "Utils/Utils.h"
 
 typedef std::string str;
@@ -74,8 +75,9 @@ int main() {
     // Intersection calculate_angle;
     // calculate_angle.fill_view_angle(dem);
 
-    Situation currSit(dem);
-    currSit.calculate_possibilities(guard_types);
-    currSit.possibilities.sort([](const NewAlloc& a, const NewAlloc& b){return b < a;});
+    Situation currSit(guard_types, dem);
+    ILS test(guard_types, dem);
+    test.solve(currSit);
+    
     std::cout << "Acabou\n";
 }

@@ -21,18 +21,17 @@ typedef std::string str;
 #ifndef __ALLOCATION_
 #define __ALLOCATION_
 class Allocation {
-
-private:
-    GuardType* guard;
-
 public:
-    int x; int y;
+    GuardType* guard;
+    const Observer* position;
     int angle; //has to be a multiple of 45
 
     Allocation();
 
-    Allocation(const int angle, GuardType* guard_type, const int x, const int y);
     Allocation(const int angle, GuardType& guard_type, const Observer& position);
+    Allocation(const int angle, GuardType* guard_type, const Observer& position);
+    // Allocation(const int angle, GuardType* guard_type, const int x, const int y);
+    Allocation(const Allocation& other);
 };
 #endif
 
@@ -44,23 +43,23 @@ public:
     int x; int y;
     GuardType* guard;
     std::vector<long long int> sector_covered_points;
-    GuardPos(GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered);
+    std::vector<long long int> sector_uncovered_points;
+    GuardPos(GuardType& guard_type, const Observer& position, const std::vector<std::vector<short int> >& covered);
+    GuardPos(GuardType& guard_type, const Observer& oldPosition, const Observer& newPosition, const std::vector<std::vector<short int> >& covered);
 };
 #endif
 
 #ifndef __NEWALLOC_
 #define __NEWALLOC_
 class NewAlloc{
-
-private:
-    Allocation alloc;
-    // long double OF_inc;
-    long long int OF_inc;
-
 public:
-    NewAlloc(const int angle, GuardPos& guardPos, const std::vector<std::vector<bool> >& covered);
+    Allocation alloc;
+    long long int numCovered_inc;
+    long double OF_inc;
+
+    NewAlloc(const int angle, GuardPos& guardPos, const Observer& position, const std::vector<std::vector<short int> >& covered);
     bool operator<(const NewAlloc& other) const;
-    long long int operator-(const NewAlloc& other);
+    long double operator-(const NewAlloc& other);
     // NewAlloc(const int angle, GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered);
 };
 #endif
@@ -68,20 +67,28 @@ public:
 #ifndef __SITUATION_
 #define __SITUATION_
 class Situation {
-
-private:
-    Terrain* dem;
-    std::vector<std::vector<bool> > covered;
-    long double OF;
-    std::list<Allocation> allocations;
-
 public:
+    std::vector<std::vector<short int> > covered;
+    std::list<Allocation> allocations;
+    Terrain* dem;
+    std::vector<GuardType>* guard_types;
+    long double OF;
+    long long int numCovered;
+    long long int iCost;
+    long long int mCost;
+
     std::list<NewAlloc> possibilities;
-    Situation(Terrain& dem);
+    Situation(std::vector<GuardType>& guard_types, Terrain& dem);
 
     long double calculate_OF();
 
-    void calculate_possibilities(std::vector<GuardType>& guard_types);
+    bool calculate_possibilities(std::vector<GuardType>& guard_types);
+    void updateCovered(Allocation& alloc);
+    void insertNewAlloc(NewAlloc& newAlloc);
+
+    void updateCovered(Allocation& alloc, const Observer* oldPos);
+    void replaceAlloc(NewAlloc& newAlloc, std::list<Allocation>::iterator& oldAlloc);
+    void switchPos(std::list<Allocation>::iterator& alloc);
 };
 #endif
 
