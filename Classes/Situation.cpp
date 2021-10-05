@@ -334,6 +334,7 @@ void Situation::insertNewAlloc(NewAlloc& newAlloc) {
     allocations.push_back(newAlloc.alloc);
     OF += newAlloc.OF_inc;
     numCovered += newAlloc.numCovered_inc;
+    iCost += newAlloc.alloc.guard->icost;
     updateCovered(newAlloc.alloc);
     newAlloc.alloc.guard->amount--;
     possibilities.clear();
