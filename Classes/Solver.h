@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <fstream>
@@ -62,9 +63,45 @@ public:
 
     ILS(std::vector<GuardType>& guard_types, Terrain& dem);
 
-    bool advance(Situation& curr);
-    void until100(Situation& curr);
-    void spendAllGuards(Situation& curr);
+    void perturb(Situation& sStar, Situation& s1);
     void solve(Situation& curr);
+};
+#endif
+
+#ifndef __POPULATION_
+#define __POPULATION_
+class Population {
+public:
+    std::vector<GuardType>* guard_types;
+    Terrain* dem;
+
+    std::list<Situation> individuals;
+
+
+    Population(std::vector<GuardType>& guard_types, Terrain& dem);
+
+    // void perturb(Situation& sStar, Situation& s1);
+    // void solve(Situation& curr);
+};
+#endif
+
+#ifndef __GA_
+#define __GA_
+class GA {
+public:
+    std::vector<GuardType>* guard_types;
+    Terrain* dem;
+
+    Population* curr;
+    Population* improved;
+    Population* children;
+
+    Situation best;
+
+
+    GA(std::vector<GuardType>& guard_types, Terrain& dem);
+
+    // void perturb(Situation& sStar, Situation& s1);
+    // void solve(Situation& curr);
 };
 #endif

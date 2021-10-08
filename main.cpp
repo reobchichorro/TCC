@@ -58,9 +58,12 @@ void read_guardtypelist_file(const str& path, const str& filename, std::vector<G
     }
 }
 
-int main() {
-    str path, filename;
-    std::cin >> path >> filename;
+int main(int argc, char** argv) {
+    srand(time(0));
+    if(argc != 3) 
+        return 1;
+    
+    str path=argv[1], filename=argv[2];
     InputFileData input;
     read_file(path, filename, input);
     Terrain dem;
@@ -78,6 +81,6 @@ int main() {
     Situation currSit(guard_types, dem);
     ILS test(guard_types, dem);
     test.solve(currSit);
-    
-    std::cout << "Acabou\n";
+
+    std::cout << currSit.numCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
 }

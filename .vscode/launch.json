@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/main.out",
-            "args": ["Inputs/MetaInput/", "0000"],
+            "args": ["Inputs/MetaInput/", "0001"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
