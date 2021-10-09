@@ -90,6 +90,8 @@ public:
     void updateCovered(Allocation& alloc);
     void insertNewAlloc(NewAlloc& newAlloc);
 
+    bool addRandomNewAlloc();
+
     void updateCovered(Allocation& alloc, const Observer* oldPos);
     void replaceAlloc(NewAlloc& newAlloc, std::list<Allocation>::iterator& oldAlloc);
     void switchPos(std::list<Allocation>::iterator& alloc);

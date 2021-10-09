@@ -364,6 +364,16 @@ void Situation::insertNewAlloc(NewAlloc& newAlloc) {
     possibilities.clear();
 }
 
+bool Situation::addRandomNewAlloc() {
+    int i = rand()%(guard_types->size());
+    int j = rand()%(dem->best_observers.size());
+    int angle = angles[rand()%angles.size()];
+
+    GuardPos possibility(guard_types->at(i), dem->best_observers[j], covered);
+    NewAlloc toAdd(angle, possibility, dem->best_observers[j], covered, i);
+    insertNewAlloc(toAdd);
+}
+
 void Situation::updateCovered(Allocation& alloc, const Observer* oldPos) {
     const GuardType* guard = alloc.guard;
     const Observer* position = alloc.position;

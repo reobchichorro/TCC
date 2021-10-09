@@ -146,14 +146,169 @@ void ILS::solve(Situation& curr) {
 Population::Population(std::vector<GuardType>& guard_types, Terrain& dem) {
     this->guard_types = &guard_types;
     this->dem = &dem;
-    this->individuals = std::list<Situation>();
+    this->individuals = std::vector<Situation>(36);
+    popSize = 0;
+}
+
+void Population::addIndividual(const Situation& indi) {
+    this->individuals[popSize] = indi;
+    popSize++;
+}
+
+void Population::buildIndividual() {
+    individuals[popSize] = Situation(*guard_types, *dem);
+    for(int i=0; i<25; i++) {
+        individuals.back().addRandomNewAlloc();
+    }
+    popSize++;
+}
+
+void Population::generatePop() {
+    while(popSize < this->individuals.size()) {
+        buildIndividual();
+    }
+}
+
+void Population::reproduce(Situation& child, const Situation& dad, const Situation& mom) {
+    int dadRemaining = dad.allocations.size();
+    int momRemaining = mom.allocations.size();
+    std::vector<bool> dadPicked(dadRemaining, false);
+    std::vector<bool> momPicked(momRemaining, false);
+    std::vector<bool> originParent;
+    std::vector<int> idxParent;
+    int i=0, j=0, k=0;
+    double best;
+    originParent.reserve(dadRemaining+momRemaining);
+    idxParent.reserve(dadRemaining+momRemaining);
+
+    while(dadRemaining > 0 || momRemaining > 0) {
+        i=0;
+        for(auto& alloc : dad.allocations) {
+            if(dadPicked[i]) {
+                i++;
+                continue;   
+            }
+
+            GuardPos possibility(*alloc.guard, *alloc.position, child.covered);
+            child.possibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, child.covered, alloc.guardidx));
+            originParent.push_back(false);
+            idxParent.push_back(i);
+            i++;
+        }
+
+        j=0;
+        for(auto& alloc : mom.allocations) {
+            if(momPicked[j]) {
+                j++;
+                continue;   
+            }
+
+            GuardPos possibility(*alloc.guard, *alloc.position, child.covered);
+            child.possibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, child.covered, alloc.guardidx));
+            originParent.push_back(true);
+            idxParent.push_back(j);
+            j++;
+        }
+
+        auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+
+        for(auto& newAlloc : child.possibilities) {
+            if(newAlloc.OF_inc == bestAlloc->OF_inc) {
+                break;
+            }
+            k++;
+        }
+        if(originParent[k]) {
+            momPicked[idxParent[k]] = true;
+            momRemaining--;
+        } else {
+            dadPicked[idxParent[k]] = true;
+            dadRemaining--;
+        }
+        child.insertNewAlloc(*bestAlloc);
+        originParent.clear();
+        idxParent.clear();
+    }
+}
+
+void Population::mutate(Situation& child) {
+    int mut = rand()%100;
+    if(mut >= 30) return;
+    if(mut < 10) {
+        int i = 0;
+        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
+            child.switchPos(alloc);
+            auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+            if(bestAlloc->OF_inc <= 0.0) {
+                child.possibilities.clear();
+            }
+            else {
+                child.replaceAlloc(*bestAlloc, alloc);
+            }
+        }
+    } else if(mut < 20) {
+        return;
+    } else {
+        return;
+    }
+}
+
+void Population::crossover(const Population& oldGen) {
+    // std::vector<int> bestOld(oldGen.popSize);
+    // for(int i=0; i<bestOld.size(); i++)
+    //     bestOld[i] = i;
+    // sort(all(bestOld), [&](int a, int b){ return oldGen.individuals[a].OF < oldGen.individuals[b].OF; });
+
+    // std::vector<
+    for(int i=0; i<individuals.size(); i++) {
+        reproduce(individuals[i], oldGen.individuals[i], oldGen.individuals[individuals.size()-1-i]);
+        mutate(individuals[i]);
+    }    
 }
 
 GA::GA(std::vector<GuardType>& guard_types, Terrain& dem) {
     this->guard_types = &guard_types;
     this->dem = &dem;
-    this->curr = NULL;
-    this->improved = NULL;
+    this->curr = new Population(guard_types, dem);
+    this->curr->generatePop();
+    this->best = *std::min_element(curr->individuals.begin(), curr->individuals.end(), [](const Situation& a, const Situation& b){return b.OF < a.OF;});
     this->children = NULL;
-    this->best = Situation();
+    this->improved = NULL;
+}
+
+void GA::createNewGeneration() {
+    this->children = new Population(*guard_types, *dem);
+    this->children->crossover(*(this->curr));
+
+    std::vector<int> bestOld(this->curr->popSize);
+    std::vector<int> bestNew(this->children->popSize);
+    for(int i=0; i<bestOld.size(); i++) {
+        bestOld[i] = i;
+        bestNew[i] = i;
+    }
+    sort(all(bestOld), [&](int a, int b){ return this->curr->individuals[a].OF < this->curr->individuals[b].OF; });
+    sort(all(bestNew), [&](int a, int b){ return this->children->individuals[a].OF < this->children->individuals[b].OF; });
+    if(this->curr->individuals[bestOld[0]].OF > this->children->individuals[bestNew[0]].OF) {
+        this->best = this->children->individuals[bestNew[0]];
+    }
+
+    this->improved = new Population(*guard_types, *dem);
+    int i=0, j=0;
+    long double oldOF, newOF;
+    while(this->improved->popSize < 36) {
+        oldOF = this->curr->individuals[bestOld[i]].OF;
+        newOF = this->children->individuals[bestNew[j]].OF;
+        if(oldOF > newOF) {
+            this->improved->addIndividual(this->curr->individuals[bestOld[i]]);
+            i++;
+        } else {
+            this->improved->addIndividual(this->curr->individuals[bestNew[j]]);
+            j++;
+        }
+    }
+
+    delete this->curr;
+    delete this->children;
+    this->curr = this->improved;
+    this->improved = NULL;
 }
