@@ -48,3 +48,7 @@ void GuardType::read_file(const str& path, const str& filename) {
 
     guardtypefile >> amount;
 }
+
+void GuardType::adjustICost(int nrows) {
+    icost = 5*nrows*nrows*icost/100000;
+}

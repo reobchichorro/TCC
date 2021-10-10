@@ -44,9 +44,14 @@ public:
     int x; int y;
     const GuardType* guard;
     std::vector<long long int> sector_covered_points;
+    std::vector<long long int> sector_twiceCovered_points;
     std::vector<long long int> sector_old_covered_points;
+    std::vector<long long int> sector_old_twiceCovered_points;
+
     GuardPos(const GuardType& guard_type, const Observer& position, const std::vector<std::vector<short int> >& covered);
     GuardPos(const GuardType& guard_type, const Observer& oldPosition, const Observer& newPosition, const std::vector<std::vector<short int> >& covered);
+
+    long long int calculateOF_inc(const int angle, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
 };
 #endif
 
@@ -55,10 +60,11 @@ public:
 class NewAlloc{
 public:
     Allocation alloc;
+    long long int OF_inc;
     long long int numCovered_inc;
-    long double OF_inc;
+    long long int numTwiceCovered_inc;
 
-    NewAlloc(const int angle, GuardPos& guardPos, const Observer& position, const std::vector<std::vector<short int> >& covered, int gidx);
+    NewAlloc(const int angle, GuardPos& guardPos, const Observer& position, int gidx, long long int OF_inc, const long long int& numCovered_diff, const long long int& numTwiceCovered_diff);
     bool operator<(const NewAlloc& other) const;
     long double operator-(const NewAlloc& other);
     // NewAlloc(const int angle, GuardType& guard_type, const Observer& position, const std::vector<std::vector<bool> >& covered);
@@ -74,8 +80,9 @@ public:
     std::vector<std::vector<short int> > covered;
     std::list<Allocation> allocations;
     std::vector<int> guard_amount;
-    long double OF;
+    long long int OF;
     long long int numCovered;
+    long long int numTwiceCovered;
     long long int iCost;
     long long int mCost;
 

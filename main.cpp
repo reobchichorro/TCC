@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
 
     dem.read_file(site_folder, input.test_case_name);
     read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types, guard_radii);
+    for(auto& guard: guard_types) guard.adjustICost(dem.nrows);
     dem.fill_best_observers(site_folder, input.test_case_name, input.shedbin_folder, guard_radii);
 
     // Intersection calculate_angle;
@@ -81,6 +82,13 @@ int main(int argc, char** argv) {
     Situation currSit(guard_types, dem);
     ILS test(guard_types, dem);
     test.solve(currSit);
+    std::cout << 4*currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
 
-    std::cout << currSit.numCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
+    GA teste(guard_types, dem);
+    for(int i=0; i<20; i++) {
+        std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
+        teste.createNewGeneration();
+    }
+    std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
+
 }

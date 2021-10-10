@@ -33,5 +33,6 @@ public:
     GuardType(const str& name, const double height, const double radius, const double angle, const int icost, const double mcost, const int amount);
 
     void read_file(const str& path, const str& filename);
+    void adjustICost(int nrows);
 };
 #endif

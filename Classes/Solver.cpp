@@ -72,7 +72,7 @@ void LS::only_one_neigh(Situation& curr, int neighborhood, int improv) {
         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
             curr.switchPos(alloc);
             auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(bestAlloc->OF_inc <= 0.0) {
+            if(bestAlloc->OF_inc <= 0) {
                 curr.possibilities.clear();
             }
             else {
@@ -109,7 +109,11 @@ void ILS::perturb(Situation& sStar, Situation& s1) {
     for(auto it = sStar.allocations.begin(); it != sStar.allocations.end(); it++, i++) {
         if(to_keep.find(i) != to_keep.end()) {
             GuardPos gPos(*(it->guard), *(it->position), s1.covered);
-            NewAlloc toInsert(it->angle, gPos, *(it->position), s1.covered, it->guardidx);
+
+            long long int numCovered_inc, numTwiceCovered_inc;
+            long long int OF_inc = gPos.calculateOF_inc(it->angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
+
+            NewAlloc toInsert(it->angle, gPos, *(it->position), it->guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc);
             s1.insertNewAlloc(toInsert);
         }
     }
@@ -146,7 +150,7 @@ void ILS::solve(Situation& curr) {
 Population::Population(std::vector<GuardType>& guard_types, Terrain& dem) {
     this->guard_types = &guard_types;
     this->dem = &dem;
-    this->individuals = std::vector<Situation>(36);
+    this->individuals = std::vector<Situation>(36, Situation(guard_types, dem));
     popSize = 0;
 }
 
@@ -156,9 +160,9 @@ void Population::addIndividual(const Situation& indi) {
 }
 
 void Population::buildIndividual() {
-    individuals[popSize] = Situation(*guard_types, *dem);
+    // individuals[popSize] = Situation(*guard_types, *dem);
     for(int i=0; i<25; i++) {
-        individuals.back().addRandomNewAlloc();
+        individuals[popSize].addRandomNewAlloc();
     }
     popSize++;
 }
@@ -166,6 +170,12 @@ void Population::buildIndividual() {
 void Population::generatePop() {
     while(popSize < this->individuals.size()) {
         buildIndividual();
+    }
+}
+
+void Population::fillCovered() {
+    for(auto& individual: this->individuals) {
+        individual.covered = std::vector<std::vector<short int> >(dem->nrows, std::vector<short int>(dem->nrows, 0));
     }
 }
 
@@ -181,7 +191,7 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
     originParent.reserve(dadRemaining+momRemaining);
     idxParent.reserve(dadRemaining+momRemaining);
 
-    while(dadRemaining > 0 || momRemaining > 0) {
+    while((dadRemaining > 0 || momRemaining > 0) && child.allocations.size() < dadPicked.size()) {
         i=0;
         for(auto& alloc : dad.allocations) {
             if(dadPicked[i]) {
@@ -190,7 +200,10 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
             }
 
             GuardPos possibility(*alloc.guard, *alloc.position, child.covered);
-            child.possibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, child.covered, alloc.guardidx));
+            long long int numCovered_inc, numTwiceCovered_inc;
+            long long int OF_inc = possibility.calculateOF_inc(alloc.angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
+
+            child.possibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, alloc.guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
             originParent.push_back(false);
             idxParent.push_back(i);
             i++;
@@ -204,7 +217,10 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
             }
 
             GuardPos possibility(*alloc.guard, *alloc.position, child.covered);
-            child.possibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, child.covered, alloc.guardidx));
+            long long int numCovered_inc, numTwiceCovered_inc;
+            long long int OF_inc = possibility.calculateOF_inc(alloc.angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
+
+            child.possibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, alloc.guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
             originParent.push_back(true);
             idxParent.push_back(j);
             j++;
@@ -212,6 +228,7 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
 
         auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
 
+        k=0;
         for(auto& newAlloc : child.possibilities) {
             if(newAlloc.OF_inc == bestAlloc->OF_inc) {
                 break;
@@ -239,7 +256,7 @@ void Population::mutate(Situation& child) {
         for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
             child.switchPos(alloc);
             auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(bestAlloc->OF_inc <= 0.0) {
+            if(bestAlloc->OF_inc <= 0) {
                 child.possibilities.clear();
             }
             else {
@@ -263,6 +280,7 @@ void Population::crossover(const Population& oldGen) {
     for(int i=0; i<individuals.size(); i++) {
         reproduce(individuals[i], oldGen.individuals[i], oldGen.individuals[individuals.size()-1-i]);
         mutate(individuals[i]);
+        popSize++;
     }    
 }
 
@@ -278,6 +296,7 @@ GA::GA(std::vector<GuardType>& guard_types, Terrain& dem) {
 
 void GA::createNewGeneration() {
     this->children = new Population(*guard_types, *dem);
+    // this->children->fillCovered();
     this->children->crossover(*(this->curr));
 
     std::vector<int> bestOld(this->curr->popSize);
@@ -286,9 +305,9 @@ void GA::createNewGeneration() {
         bestOld[i] = i;
         bestNew[i] = i;
     }
-    sort(all(bestOld), [&](int a, int b){ return this->curr->individuals[a].OF < this->curr->individuals[b].OF; });
-    sort(all(bestNew), [&](int a, int b){ return this->children->individuals[a].OF < this->children->individuals[b].OF; });
-    if(this->curr->individuals[bestOld[0]].OF > this->children->individuals[bestNew[0]].OF) {
+    sort(all(bestOld), [&](int a, int b){ return this->curr->individuals[a].OF > this->curr->individuals[b].OF; });
+    sort(all(bestNew), [&](int a, int b){ return this->children->individuals[a].OF > this->children->individuals[b].OF; });
+    if(this->curr->individuals[bestOld[0]].OF < this->children->individuals[bestNew[0]].OF) {
         this->best = this->children->individuals[bestNew[0]];
     }
 
@@ -302,7 +321,7 @@ void GA::createNewGeneration() {
             this->improved->addIndividual(this->curr->individuals[bestOld[i]]);
             i++;
         } else {
-            this->improved->addIndividual(this->curr->individuals[bestNew[j]]);
+            this->improved->addIndividual(this->children->individuals[bestNew[j]]);
             j++;
         }
     }

@@ -83,6 +83,7 @@ public:
     void addIndividual(const Situation& indi);
     void buildIndividual();
     void generatePop();
+    void fillCovered();
 
     void reproduce(Situation& child, const Situation& dad, const Situation& mom);
     void mutate(Situation& child);
