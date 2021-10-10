@@ -59,7 +59,7 @@ void read_guardtypelist_file(const str& path, const str& filename, std::vector<G
 }
 
 int main(int argc, char** argv) {
-    srand(time(0));
+    srand(4);
     if(argc != 3) 
         return 1;
     
@@ -79,10 +79,10 @@ int main(int argc, char** argv) {
     // Intersection calculate_angle;
     // calculate_angle.fill_view_angle(dem);
 
-    Situation currSit(guard_types, dem);
-    ILS test(guard_types, dem);
-    test.solve(currSit);
-    std::cout << 4*currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
+    // Situation currSit(guard_types, dem);
+    // ILS test(guard_types, dem);
+    // test.solve(currSit);
+    // std::cout << 4*currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
 
     GA teste(guard_types, dem);
     for(int i=0; i<20; i++) {

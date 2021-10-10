@@ -50,8 +50,12 @@ public:
 
     GuardPos(const GuardType& guard_type, const Observer& position, const std::vector<std::vector<short int> >& covered);
     GuardPos(const GuardType& guard_type, const Observer& oldPosition, const Observer& newPosition, const std::vector<std::vector<short int> >& covered);
+    GuardPos(const GuardType& guard_type, const GuardType& newGuard, const Observer& position, const std::vector<std::vector<short int> >& covered);
+    GuardPos(const GuardType& guard_type, const int oldAngle, const Observer& position, const std::vector<std::vector<short int> >& covered);
 
     long long int calculateOF_inc(const int angle, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
+    long long int calculateOF_incGuard(const int angle, long long int oldICost, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
+    long long int calculateOF_incAngle(const int oldAngle, const int newAngle, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
 };
 #endif
 
@@ -99,8 +103,12 @@ public:
 
     bool addRandomNewAlloc();
 
-    void updateCovered(Allocation& alloc, const Observer* oldPos);
-    void replaceAlloc(NewAlloc& newAlloc, std::list<Allocation>::iterator& oldAlloc);
+    void updateCovered_Pos(Allocation& alloc, const Observer* oldPos);
+    void updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard);
+    void updateCovered_Angle(Allocation& alloc, const int oldAngle);
+    void replaceAlloc(NewAlloc& newAlloc, std::list<Allocation>::iterator& oldAlloc, int mod);
     void switchPos(std::list<Allocation>::iterator& alloc);
+    void switchGuard(std::list<Allocation>::iterator& alloc);
+    void switchAngle(std::list<Allocation>::iterator& alloc);
 };
 #endif

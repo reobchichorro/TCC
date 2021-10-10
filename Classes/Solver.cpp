@@ -65,18 +65,40 @@ LS::LS(std::vector<GuardType>& guard_types, Terrain& dem) {
 }
 
 void LS::only_one_neigh(Situation& curr, int neighborhood, int improv) {
-    if (neighborhood == 0) { //switch the guard in pos, requires available guard
-        return;
-    } else if (neighborhood == 1) { //switch the pos of guard
+    if (neighborhood == 0) { //switch the pos of guard
         int i = 0;
         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
             curr.switchPos(alloc);
             auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(bestAlloc->OF_inc <= 0) {
+            if(curr.possibilities.empty() || bestAlloc->OF_inc <= 0) {
                 curr.possibilities.clear();
             }
             else {
-                curr.replaceAlloc(*bestAlloc, alloc);
+                curr.replaceAlloc(*bestAlloc, alloc, 0);
+            }
+        }
+    } else if (neighborhood == 1) { //switch the guard in pos
+        int i = 0;
+        for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
+            curr.switchGuard(alloc);
+            auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+            if(curr.possibilities.empty() || bestAlloc->OF_inc <= 0) {
+                curr.possibilities.clear();
+            }
+            else {
+                curr.replaceAlloc(*bestAlloc, alloc, 1);
+            }
+        }
+    } else if (neighborhood == 2) { // switch angle of guard
+        int i = 0;
+        for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
+            curr.switchAngle(alloc);
+            auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+            if(curr.possibilities.empty() || bestAlloc->OF_inc <= 0) {
+                curr.possibilities.clear();
+            }
+            else {
+                curr.replaceAlloc(*bestAlloc, alloc, 2);
             }
         }
     }
@@ -122,15 +144,20 @@ void ILS::perturb(Situation& sStar, Situation& s1) {
 void ILS::solve(Situation& curr) {
     Greedy s0(*guard_types, *dem);
     s0.solve(curr);
+    std::cout << curr.calculate_OF() << "s0\n";
     LS sStar(*guard_types, *dem);
     sStar.only_one_neigh(curr, 1, 0);
+    std::cout << curr.calculate_OF() << "sStar\n";
 
     Situation s1(*guard_types, *dem);
     perturb(curr, s1);
+    std::cout << s1.calculate_OF() << "s1\n";
     Greedy s1g(*guard_types, *dem);
     s1g.solve(s1);
+    std::cout << s1.calculate_OF() << "s1g\n";
     LS s1Star(*guard_types, *dem);
-    s1Star.only_one_neigh(s1, 1, 0);
+    s1Star.only_one_neigh(s1, 2, 0);
+    std::cout << s1.calculate_OF() << "s1Star\n";
     if(s1.OF > curr.OF) {
         curr = s1;
     }
@@ -138,8 +165,11 @@ void ILS::solve(Situation& curr) {
     for(int i=0; i<2; i++) {
         s1 = Situation(*guard_types, *dem);
         perturb(curr, s1);
+        std::cout << s1.calculate_OF() << "s1i\n";
         s1g.solve(s1);
-        s1Star.only_one_neigh(s1, 1, 0);
+        std::cout << s1.calculate_OF() << "s1gi\n";
+        s1Star.only_one_neigh(s1, i, 0);
+        std::cout << s1.calculate_OF() << "s1Stari\n";
         if(s1.OF > curr.OF) {
             curr = s1;
         }
@@ -251,22 +281,42 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
 void Population::mutate(Situation& child) {
     int mut = rand()%100;
     if(mut >= 30) return;
-    if(mut < 10) {
+    if(mut < 10) { // switch pos of guard
         int i = 0;
         for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
             child.switchPos(alloc);
             auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(bestAlloc->OF_inc <= 0) {
+            if(child.possibilities.empty() || bestAlloc->OF_inc <= 0) {
                 child.possibilities.clear();
             }
             else {
-                child.replaceAlloc(*bestAlloc, alloc);
+                child.replaceAlloc(*bestAlloc, alloc, 0);
             }
         }
-    } else if(mut < 20) {
-        return;
-    } else {
-        return;
+    } else if(mut < 20) { // switch guard in pos
+        int i = 0;
+        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
+            child.switchGuard(alloc);
+            auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+            if(child.possibilities.empty() || bestAlloc->OF_inc <= 0) {
+                child.possibilities.clear();
+            }
+            else {
+                child.replaceAlloc(*bestAlloc, alloc, 1);
+            }
+        }
+    } else { // switch angle of guard
+        int i = 0;
+        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
+            child.switchAngle(alloc);
+            auto bestAlloc = std::min_element(child.possibilities.begin(), child.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+            if(child.possibilities.empty() || bestAlloc->OF_inc <= 0) {
+                child.possibilities.clear();
+            }
+            else {
+                child.replaceAlloc(*bestAlloc, alloc, 2);
+            }
+        }
     }
 }
 
