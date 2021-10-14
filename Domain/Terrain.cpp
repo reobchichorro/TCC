@@ -19,7 +19,7 @@
 typedef std::string str;
 typedef std::pair<int, int> pii;
 
-Observer::Observer(str& point_name, const std::filesystem::path& path, const int nrows, const std::set<int>& guard_radii) {
+Observer::Observer(str& point_name, const std::filesystem::path& path, const int nrows, const std::set<int>& guard_radii, const std::set<int>& guard_heights) {
     point_name.erase(0, 1);
     auto pos = point_name.find('y');
     point_name.replace(pos, 1, " ");
@@ -28,20 +28,23 @@ Observer::Observer(str& point_name, const std::filesystem::path& path, const int
 
     std::ifstream file_observer(path, std::ios::binary);
     std::vector<unsigned char> o_shed(std::istreambuf_iterator<char>(file_observer), {});
-    shed = std::vector<std::vector<bool> >(nrows, std::vector<bool>(nrows, 0));
     
-    int i=0, j=0;
-    for(int l=0; l<o_shed.size(); l++) {
-        for(int k=7; k>=0; k--) {
-            shed[i][j] = (o_shed[l])&(1<<k);
-            j++;
-            if(j >= nrows) {
-                j=0; i++;
-                if(i >= nrows)
-                    break;
+    for(int height : guard_heights) {
+        shed[height] = std::vector<std::vector<bool> >(nrows, std::vector<bool>(nrows, 0));
+        int i=0, j=0;
+        for(int l=0; l<o_shed.size(); l++) {
+            for(int k=7; k>=0; k--) {
+                shed[height][i][j] = (o_shed[l])&(1<<k);
+                j++;
+                if(j >= nrows) {
+                    j=0; i++;
+                    if(i >= nrows)
+                        break;
+                }
             }
         }
     }
+    
 
     limits_row = std::map<int, std::vector<pii> >();
     limits_col = std::map<int, std::vector<pii> >();
@@ -206,10 +209,10 @@ void Terrain::read_file(const str& site_folder, const str& test_case_name) {
     }
 }
 
-void Terrain::fill_best_observers(const str& site_folder, const str& test_case_name, const str& shedbin_folder, const std::set<int>& guard_radii) {
+void Terrain::fill_best_observers(const str& site_folder, const str& test_case_name, const str& shedbin_folder, const std::set<int>& guard_radii, const std::set<int>& guard_heights) {
     str point_name;
     for(const auto& file: std::filesystem::directory_iterator(site_folder + test_case_name + "/" + shedbin_folder)) {
         point_name = file.path().filename();
-        best_observers.push_back(Observer(point_name, file.path(), nrows, guard_radii));
+        best_observers.push_back(Observer(point_name, file.path(), nrows, guard_radii, guard_heights));
     }
 }

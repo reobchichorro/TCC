@@ -1,25 +1,32 @@
 FLAGS = -std=c++17 -g
 
-all : main.out clear.o
+all : main.out #clear.o
 
 clear.o:
 	rm *.o
 
-main.out: main.o Utils.o Classes.o Situation.o Solver.o
-	g++ main.o Terrain.o Utils.o GuardType.o Situation.o Solver.o -o main.out $(FLAGS)
+main.out: main.o Utils.o Defs.o Alloc.o Situation.o GreedyLS.o MH.o
+	g++ main.o Terrain.o Utils.o GuardType.o AllocGPos.o Situation.o GreedyLS.o ILS.o GA.o -o main.out $(FLAGS)
 
 Utils.o:
 	g++ -c Utils/Utils.cpp $(FLAGS)
 
-Solver.o: Classes.o Utils.o Situation.o
-	g++ -c Classes/Solver.cpp $(FLAGS)
+MH.o: GreedyLS.o Situation.o Alloc.o Defs.o Utils.o
+	g++ -c MH/ILS.cpp $(FLAGS)
+	g++ -c MH/GA.cpp $(FLAGS)
 
-Situation.o: Classes.o Utils.o
-	g++ -c Classes/Situation.cpp $(FLAGS)
+GreedyLS.o: Situation.o Alloc.o Defs.o Utils.o
+	g++ -c MH/GreedyLS.cpp $(FLAGS)
 
-Classes.o: Utils.o
-	g++ -c Classes/Terrain.cpp $(FLAGS)
-	g++ -c Classes/GuardType.cpp $(FLAGS)
+Situation.o: Alloc.o Defs.o Utils.o
+	g++ -c Domain/Situation.cpp $(FLAGS)
+
+Alloc.o: Defs.o Utils.o
+	g++ -c Domain/AllocGPos.cpp $(FLAGS)
+
+Defs.o: Utils.o
+	g++ -c Domain/Terrain.cpp $(FLAGS)
+	g++ -c Domain/GuardType.cpp $(FLAGS)
 
 main.o: main.cpp
 	g++ -c main.cpp $(FLAGS)

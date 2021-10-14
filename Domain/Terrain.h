@@ -26,12 +26,12 @@ class Observer {
 public:
     int x; int y;
 
-    std::vector<std::vector<bool> > shed;
+    std::unordered_map<int, std::vector<std::vector<bool> > > shed;
 
     std::map<int, std::vector<pii> > limits_row;
     std::map<int, std::vector<pii> > limits_col;
 
-    Observer(str& point_name, const std::filesystem::path& path, const int nrows, const std::set<int>& guard_radii);
+    Observer(str& point_name, const std::filesystem::path& path, const int nrows, const std::set<int>& guard_radii, const std::set<int>& guard_heights);
 };
 #endif
 
@@ -59,6 +59,6 @@ public:
 
     void read_file(const str& site_folder, const str& test_case_name);
 
-    void fill_best_observers(const str& site_folder, const str& test_case_name, const str& shedbin_folder, const std::set<int>& guard_radii);
+    void fill_best_observers(const str& site_folder, const str& test_case_name, const str& shedbin_folder, const std::set<int>& guard_radii, const std::set<int>& guard_heights);
 };
 #endif

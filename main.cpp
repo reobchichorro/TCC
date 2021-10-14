@@ -1,10 +1,13 @@
 #include <iostream>
 #include <string>
 #include <set>
-#include "Classes/Terrain.h"
-#include "Classes/GuardType.h"
-#include "Classes/Situation.h"
-#include "Classes/Solver.h"
+#include "Domain/Terrain.h"
+#include "Domain/GuardType.h"
+#include "Domain/Alloc&GPos.h"
+#include "Domain/Situation.h"
+#include "MH/Greedy&LS.h"
+#include "MH/ILS.h"
+#include "MH/GA.h"
 #include "Utils/Utils.h"
 
 typedef std::string str;
@@ -42,7 +45,7 @@ void read_file(const str& path, const str& filename, InputFileData& input) {
     }
 }
 
-void read_guardtypelist_file(const str& path, const str& filename, std::vector<GuardType>& guardtypes, std::set<int>& guard_radii) {
+void read_guardtypelist_file(const str& path, const str& filename, std::vector<GuardType>& guardtypes, std::set<int>& guard_radii, std::set<int>& guard_heights) {
     str guardtype_abspath;
     int n;
     std::ifstream guardtypelistfile(path + filename);
@@ -55,6 +58,7 @@ void read_guardtypelist_file(const str& path, const str& filename, std::vector<G
         guardtypelistfile >> guardtype_filename;
         guardtypes[i].read_file(guardtype_abspath, guardtype_filename);
         guard_radii.insert(guardtypes[i].radius);
+        guard_heights.insert(guardtypes[i].height);
     }
 }
 
@@ -70,11 +74,12 @@ int main(int argc, char** argv) {
     std::vector<GuardType> guard_types;
 
     std::set<int> guard_radii;
+    std::set<int> guard_heights;
 
     dem.read_file(site_folder, input.test_case_name);
-    read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types, guard_radii);
+    read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types, guard_radii, guard_heights);
     for(auto& guard: guard_types) guard.adjustICost(dem.nrows);
-    dem.fill_best_observers(site_folder, input.test_case_name, input.shedbin_folder, guard_radii);
+    dem.fill_best_observers(site_folder, input.test_case_name, input.shedbin_folder, guard_radii, guard_heights);
 
     // Intersection calculate_angle;
     // calculate_angle.fill_view_angle(dem);
