@@ -3,9 +3,9 @@
 #include <set>
 #include "Domain/Terrain.h"
 #include "Domain/GuardType.h"
-#include "Domain/Alloc&GPos.h"
+#include "Domain/AllocGPos.h"
 #include "Domain/Situation.h"
-#include "MH/Greedy&LS.h"
+#include "MH/GreedyLS.h"
 #include "MH/ILS.h"
 #include "MH/GA.h"
 #include "Utils/Utils.h"
@@ -16,7 +16,7 @@ str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 
 struct InputFileData {
     str test_case_name;
-    str shedbin_folder;
+    str roi_folder;
     str guardtypelist_abspath;
     str guardtypelist_filename;
     std::vector<bool> obj_bitlist;
@@ -29,7 +29,7 @@ void read_file(const str& path, const str& filename, InputFileData& input) {
 
     std::ifstream inputfile(path + filename);
     inputfile >> input.test_case_name;
-    inputfile >> input.shedbin_folder;
+    inputfile >> input.roi_folder;
 
     inputfile >> input.guardtypelist_abspath;
     inputfile >> input.guardtypelist_filename;
@@ -66,6 +66,9 @@ int main(int argc, char** argv) {
     srand(4);
     if(argc != 3) 
         return 1;
+
+    str msg = "Reading";
+    // Timer tIn(msg);
     
     str path=argv[1], filename=argv[2];
     InputFileData input;
@@ -79,21 +82,27 @@ int main(int argc, char** argv) {
     dem.read_file(site_folder, input.test_case_name);
     read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types, guard_radii, guard_heights);
     for(auto& guard: guard_types) guard.adjustICost(dem.nrows);
-    dem.fill_best_observers(site_folder, input.test_case_name, input.shedbin_folder, guard_radii, guard_heights);
+    dem.fill_best_observers(site_folder, input.test_case_name, input.roi_folder, guard_radii, guard_heights);
+
+    // tIn.~Timer();
 
     // Intersection calculate_angle;
     // calculate_angle.fill_view_angle(dem);
 
+    // Timer tILS("ILS");
     // Situation currSit(guard_types, dem);
     // ILS test(guard_types, dem);
     // test.solve(currSit);
     // std::cout << 4*currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
 
+    msg = "GA";
+    // Timer tGA(msg);
     GA teste(guard_types, dem);
-    for(int i=0; i<20; i++) {
+    for(int i=0; i<1; i++) {
         std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
         teste.createNewGeneration();
     }
+    // tGA.~Timer();
     std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
 
 }

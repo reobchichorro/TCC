@@ -3,6 +3,10 @@
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+#include <time.h>
+#include <iostream>
+#include <cstdio>
+#include <chrono>
 
 #define all(v) v.begin(),v.end()
 #define eps 1e-6
@@ -72,5 +76,29 @@ public:
 
     int idxi() const;
     int idxj() const;
+};
+#endif
+
+#ifndef __TIMER_
+#define __TIMER_
+// // Utils for measuring time, etc...
+// bool readFileContent(char *buffer, size_t sizeRead, FILE *fp);
+
+//This class prints a message (and the ellapsed time) when its destructor is called (unless the message is empty)
+//we may also reset the timer and get the current time now (since when the class was constructed)
+class Timer {
+public:
+    Timer(const std::string &msg);
+    ~Timer();
+    void reset();
+    void printNow(const std::string &st) const;
+    double getTimeNow() const;
+private: 
+    typedef std::chrono::time_point<std::chrono::_V2::system_clock, std::chrono::duration<long long int, std::ratio<1, 1000000000> > > TIME_T;
+    std::string st; 
+    TIME_T t0;
+
+    double convertTimeMsecs(const std::chrono::duration<double> td) const;
+    std::chrono::duration<double> diff(TIME_T  start, TIME_T  end) const;
 };
 #endif

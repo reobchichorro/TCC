@@ -1,9 +1,13 @@
 #include <string>
 #include <algorithm>
-
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+
+#include <time.h>
+#include <iostream>
+#include <cstdio>
+#include <chrono>
 #include "Utils.h"
 
 #define all(v) v.begin(),v.end()
@@ -69,3 +73,28 @@ double ij::j() const { return jj + corner*0.5; };
 
 int ij::idxi() const { return ii; }
 int ij::idxj() const { return jj; }
+
+
+Timer::Timer(const std::string &msg): st(msg) {reset();}
+Timer::~Timer() {
+    if(st.size()!=0)
+        printNow(st);
+}
+void Timer::reset() { t0 = std::chrono::system_clock::now(); }
+void Timer::printNow(const std::string &st) const {  
+    std::cerr << "Time to " << st << " : "<< getTimeNow() << "\n";
+}
+double Timer::getTimeNow() const {
+    auto  t1 = std::chrono::system_clock::now();;
+    //clock_gettime(CLOCK_REALTIME, &t1);
+    return convertTimeMsecs(diff(t0,t1))/1000;
+}
+
+double Timer::convertTimeMsecs(const std::chrono::duration<double> td) const {        
+    return td.count()*1000;
+}
+
+std::chrono::duration<double> Timer::diff(TIME_T  start, TIME_T  end) const
+{
+    return end-start;
+}

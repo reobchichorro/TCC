@@ -13,7 +13,7 @@
 #include "../Utils/Utils.h" 
 #include "Terrain.h"
 #include "GuardType.h"
-#include "Alloc&GPos.h"
+#include "AllocGPos.h"
 #include "Situation.h"
 
 #define eps 1e-6
