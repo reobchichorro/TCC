@@ -15,6 +15,12 @@
 
 typedef std::string str;
 
+void printToFile(const str& filepath, const str& toPrint) {
+    std::ofstream file(filepath);
+    file << toPrint;
+    file.close();
+}
+
 bool DoubleOps::isEqual(const double a, const double b) {
     return isZero(a-b);
 }

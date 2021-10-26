@@ -56,6 +56,7 @@ public:
     Situation(std::vector<GuardType>& guard_types, Terrain& dem);
 
     long double calculate_OF();
+    void print(str& toPrint);
 
     bool calculate_possibilities();
     void updateCovered(Allocation& alloc);

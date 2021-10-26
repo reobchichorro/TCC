@@ -50,38 +50,20 @@ void ILS::perturb(Situation& sStar, Situation& s1) {
     }
 }
 
-void ILS::solve(Situation& curr) {
-    Greedy s0(*guard_types, *dem);
-    s0.solve(curr);
-    std::cout << curr.calculate_OF() << "s0\n";
-    LS sStar(*guard_types, *dem);
-    sStar.only_one_neigh(curr, 1, 0);
-    std::cout << curr.calculate_OF() << "sStar\n";
+void ILS::solve(Situation& curr, int i) {
+    str toPrint = "";
 
     Situation s1(*guard_types, *dem);
     perturb(curr, s1);
-    std::cout << s1.calculate_OF() << "s1\n";
+    // std::cout << s1.calculate_OF() << "s1\n";
     Greedy s1g(*guard_types, *dem);
     s1g.solve(s1);
-    std::cout << s1.calculate_OF() << "s1g\n";
+    // std::cout << s1.calculate_OF() << "s1g\n";
     LS s1Star(*guard_types, *dem);
-    s1Star.only_one_neigh(s1, 2, 0);
-    std::cout << s1.calculate_OF() << "s1Star\n";
+    s1Star.only_one_neigh(s1, i, 0);
+    // std::cout << s1.calculate_OF() << "s1Star\n";
     if(s1.OF > curr.OF) {
         curr = s1;
-    }
-
-    for(int i=0; i<2; i++) {
-        s1 = Situation(*guard_types, *dem);
-        perturb(curr, s1);
-        std::cout << s1.calculate_OF() << "s1i\n";
-        s1g.solve(s1);
-        std::cout << s1.calculate_OF() << "s1gi\n";
-        s1Star.only_one_neigh(s1, i, 0);
-        std::cout << s1.calculate_OF() << "s1Stari\n";
-        if(s1.OF > curr.OF) {
-            curr = s1;
-        }
     }
 
 }

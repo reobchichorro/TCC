@@ -1,4 +1,4 @@
-FLAGS = -std=c++17 -g
+FLAGS = -std=c++17 -g -O3
 
 all : main.out #clear.o
 
@@ -7,9 +7,6 @@ clear.o:
 
 main.out: main.o Utils.o Defs.o Alloc.o Situation.o GreedyLS.o MH.o
 	g++ main.o Terrain.o Utils.o GuardType.o AllocGPos.o Situation.o GreedyLS.o ILS.o GA.o -o main.out $(FLAGS)
-
-Utils.o:
-	g++ -c Utils/Utils.cpp $(FLAGS)
 
 MH.o: GreedyLS.o Situation.o Alloc.o Defs.o Utils.o
 	g++ -c MH/ILS.cpp $(FLAGS)
@@ -27,6 +24,9 @@ Alloc.o: Defs.o Utils.o
 Defs.o: Utils.o
 	g++ -c Domain/Terrain.cpp $(FLAGS)
 	g++ -c Domain/GuardType.cpp $(FLAGS)
+
+Utils.o:
+	g++ -c Utils/Utils.cpp $(FLAGS)
 
 main.o: main.cpp
 	g++ -c main.cpp $(FLAGS)

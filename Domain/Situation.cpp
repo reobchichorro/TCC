@@ -92,6 +92,17 @@ long double Situation::calculate_OF() {
     return OF;
 }
 
+void Situation::print(str& filepath) {
+    str toPrint = "";
+    toPrint += std::to_string(this->numCovered) + "\t" + std::to_string(this->numTwiceCovered) + "\t" + std::to_string(this->iCost) + "\t" + std::to_string(this->OF) + "\n";
+    for(const Allocation& alloc: this->allocations) {
+        toPrint += alloc.guard->name + "\t" + std::to_string(alloc.position->x) + "\t" + std::to_string(alloc.position->y) + "\t" + std::to_string(alloc.angle) + "\n";
+    }
+    std::ofstream file(filepath);
+    file << toPrint;
+    file.close();
+}
+
 bool Situation::calculate_possibilities() {
     long long int OF_inc;
     long long int numCovered_inc;

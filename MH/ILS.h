@@ -28,10 +28,9 @@ public:
     std::vector<GuardType>* guard_types;
     Terrain* dem;
 
-
     ILS(std::vector<GuardType>& guard_types, Terrain& dem);
 
     void perturb(Situation& sStar, Situation& s1);
-    void solve(Situation& curr);
+    void solve(Situation& curr, int i);
 };
 #endif
