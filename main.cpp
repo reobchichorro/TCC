@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
     int it = 0;
     int printTime = 0;
     while(tILS.getTimeNow() < 600) {
-        test.solve(currSit, it);
+        test.solve(currSit, it%3);
         it++;
         if (tILS.getTimeNow() > printTime) {
             filepath = outputPath + "ILS/" + std::to_string(printTime) + ".csv";
