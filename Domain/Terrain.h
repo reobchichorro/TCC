@@ -35,6 +35,24 @@ public:
 };
 #endif
 
+#ifndef __GUARDOBS_
+#define __GUARDOBS_
+class GuardObs {
+
+public:
+    str input;
+    int x; int y;
+    int radius;
+    int height;
+    long long int numCovered;
+    // const Observer* obs;
+
+    void print(const str& path) const;
+
+    GuardObs(const str& input, int x, int y, int radius, int height, long long int numCovered);
+};
+#endif
+
 #ifndef __TERRAIN_
 #define __TERRAIN_
 class Terrain {

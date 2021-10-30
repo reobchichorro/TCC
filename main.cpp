@@ -46,20 +46,37 @@ void read_file(const str& path, const str& filename, InputFileData& input) {
     }
 }
 
-void read_guardtypelist_file(const str& path, const str& filename, std::vector<GuardType>& guardtypes, std::set<int>& guard_radii, std::set<int>& guard_heights) {
-    str guardtype_abspath;
-    int n;
-    std::ifstream guardtypelistfile(path + filename);
-    guardtypelistfile >> guardtype_abspath;
-    guardtypelistfile >> n;
-    guardtypes.resize(n);
-    
-    str guardtype_filename;
-    for(int i=0; i<n; i++) {
-        guardtypelistfile >> guardtype_filename;
-        guardtypes[i].read_file(guardtype_abspath, guardtype_filename);
-        // guard_radii.insert(guardtypes[i].radius);
-        // guard_heights.insert(guardtypes[i].height);
+void makeGuardObs(const Terrain& dem, const std::set<int>& guard_radii, const std::set<int>& guard_heights) {
+    int x, y;
+    int radius;
+    long long int numCovered;
+    str k = "a";
+    GuardObs aux(k, 0, 0, 0, 0, 0);
+    for(const Observer& obs : dem.best_observers) {
+        for(int h: guard_heights) {
+            for(int r: guard_radii) {
+                x = obs.x; y = obs.y;
+                numCovered = 0;
+                radius = r*dem.nrows/100;
+                int start = std::max(0, x - radius);
+                int stop = std::min(dem.nrows-1, x + radius);
+                int i = start;
+                
+                for(int line=0; line<obs.limits_row.at(r).size(); line++, i++) {
+                    for(int j=obs.limits_row.at(r)[line].first; j<=obs.limits_row.at(r)[line].second; j++) {
+                        numCovered += (obs.shed.at(h)[i][j]);
+                    }
+                }
+
+                aux.input = dem.name;
+                aux.x = x;
+                aux.y = y;
+                aux.height = h;
+                aux.radius = r;
+                aux.numCovered = numCovered;
+                aux.print("Utils/InputCreation/GuardDatabase/numCovered.csv");
+            }
+        }
     }
 }
 
@@ -69,13 +86,20 @@ int main(int argc, char** argv) {
 
     std::set<int> guard_radii = {5, 10, 15, 20, 25, 50};
     std::set<int> guard_heights = {0, 5, 10, 20, 50};
+    
+    std::ofstream outfile;
+    outfile.open("Utils/InputCreation/GuardDatabase/nrows.csv", std::ios_base::app); // append instead of overwrite
 
     for(const auto& entry: std::filesystem::directory_iterator("wrf/c/site/")) {
         if(entry.is_directory() && entry.path().filename().string()[0]=='2') {
-            Terrain dem;
-            std::cout << entry.path().filename().string() << "\n";
-            dem.read_file(site_folder, input.test_case_name);
-            // dem.fill_best_observers(site_folder, input.test_case_name, input.roi_folder, guard_radii, guard_heights);
+            std::ifstream f(entry.path() / "nrows");
+            int nrows; f >> nrows;
+            outfile << entry.path().filename().string() << "\t" << nrows << "\n"; 
+            // Terrain dem;
+            // std::cout << entry.path().filename().string() << "\n";
+            // dem.read_file(site_folder, entry.path().filename().string());
+            // dem.fill_best_observers(site_folder, entry.path().filename().string(), "r500/", guard_radii, guard_heights);
+            // makeGuardObs(dem, guard_radii, guard_heights);
         }
 
     }

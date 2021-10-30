@@ -160,6 +160,22 @@ Observer::Observer(str& point_name, const str& roi_path, const int nrows, const 
     // }
 }
 
+void GuardObs::print(const str& path) const{
+    std::ofstream outfile;
+
+    outfile.open(path, std::ios_base::app); // append instead of overwrite
+    outfile << input << "\t" << x << "\t" << y << "\t" << radius << "\t" << height << "\t" << numCovered << "\n"; 
+}
+
+GuardObs::GuardObs(const str& input, int x, int y, int radius, int height, long long int numCovered) {
+    this->input = input;
+    this->x = x;
+    this->y = y;
+    this->radius = radius;
+    this->height = height;
+    this->numCovered = numCovered;
+}
+
 Terrain::Terrain() {
     name = "";
     type = "";
