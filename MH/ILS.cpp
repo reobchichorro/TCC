@@ -24,7 +24,6 @@ ILS::ILS(std::vector<GuardType>& guard_types, Terrain& dem) {
 }
 
 void ILS::perturb(Situation& sStar, Situation& s1) {
-    double percent_to_keep = 0.75;
     int total = sStar.allocations.size();
     int num_to_keep = percent_to_keep*total;
     std::unordered_set<int> to_keep;

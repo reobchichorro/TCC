@@ -121,8 +121,8 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
 
 void Population::mutate(Situation& child) {
     int mut = rand()%100;
-    if(mut >= 30) return;
-    if(mut < 10) { // switch pos of guard
+    if(mut >= 90) return;
+    if(mut < 30) { // switch pos of guard
         int i = 0;
         for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
             child.switchPos(alloc);
@@ -134,7 +134,7 @@ void Population::mutate(Situation& child) {
                 child.replaceAlloc(*bestAlloc, alloc, 0);
             }
         }
-    } else if(mut < 20) { // switch guard in pos
+    } else if(mut < 60) { // switch guard in pos
         int i = 0;
         for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
             child.switchGuard(alloc);

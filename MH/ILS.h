@@ -27,6 +27,7 @@ class ILS {
 public:
     std::vector<GuardType>* guard_types;
     Terrain* dem;
+    double percent_to_keep = 0.25;
 
     ILS(std::vector<GuardType>& guard_types, Terrain& dem);
 
