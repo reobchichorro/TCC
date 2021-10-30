@@ -11,7 +11,7 @@
 #include "Utils/Utils.h"
 
 typedef std::string str;
-int version = 0;
+int version = 1;
 
 str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 
@@ -58,74 +58,29 @@ void read_guardtypelist_file(const str& path, const str& filename, std::vector<G
     for(int i=0; i<n; i++) {
         guardtypelistfile >> guardtype_filename;
         guardtypes[i].read_file(guardtype_abspath, guardtype_filename);
-        guard_radii.insert(guardtypes[i].radius);
-        guard_heights.insert(guardtypes[i].height);
+        // guard_radii.insert(guardtypes[i].radius);
+        // guard_heights.insert(guardtypes[i].height);
     }
 }
 
 int main(int argc, char** argv) {
-    srand(4);
-    if(argc != 3) 
-        return 1;
-    
-    str path=argv[1], filename=argv[2];
     InputFileData input;
-    read_file(path, filename, input);
-    Terrain dem;
-    std::vector<GuardType> guard_types;
+    // read_file(path, filename, input);
 
-    std::set<int> guard_radii;
-    std::set<int> guard_heights;
+    std::set<int> guard_radii = {5, 10, 15, 20, 25, 50};
+    std::set<int> guard_heights = {0, 5, 10, 20, 50};
 
-    dem.read_file(site_folder, input.test_case_name);
-    read_guardtypelist_file(input.guardtypelist_abspath, input.guardtypelist_filename, guard_types, guard_radii, guard_heights);
-    for(auto& guard: guard_types) guard.adjustICost(dem.nrows);
-    dem.fill_best_observers(site_folder, input.test_case_name, input.roi_folder, guard_radii, guard_heights);
-
-    str outputPath = "Outputs/" + std::to_string(version) + "/" + filename + "/";
-
-    str msg = "Greedy+LS";
-    Timer tGreedyLS(msg);
-    Situation currSit(guard_types, dem);
-    Greedy s0(guard_types, dem);
-    s0.solve(currSit);
-    LS sStar(guard_types, dem);
-    sStar.only_one_neigh(currSit, 1, 0);
-    str filepath = outputPath + "GreedyLS/" + std::to_string(tGreedyLS.getTimeNow()) + ".csv";
-    currSit.print(filepath);
-    tGreedyLS.~Timer();
-
-    Timer tILS("ILS");
-    ILS test(guard_types, dem);
-    int it = 0;
-    int printTime = 0;
-    while(tILS.getTimeNow() < 600) {
-        test.solve(currSit, it%3);
-        it++;
-        if (tILS.getTimeNow() > printTime) {
-            filepath = outputPath + "ILS/" + std::to_string(printTime) + ".csv";
-            currSit.print(filepath);
-            printTime += 30;
+    for(const auto& entry: std::filesystem::directory_iterator("wrf/c/site/")) {
+        if(entry.is_directory() && entry.path().filename().string()[0]=='2') {
+            Terrain dem;
+            std::cout << entry.path().filename().string() << "\n";
+            dem.read_file(site_folder, input.test_case_name);
+            // dem.fill_best_observers(site_folder, input.test_case_name, input.roi_folder, guard_radii, guard_heights);
         }
-    }
-    tILS.~Timer();
 
-    msg = "GA";
-    Timer tGA(msg);
-    GA teste(guard_types, dem);
-    printTime = 0;
-    str toPrint = ""; teste.best.print(toPrint);
-    while(tGA.getTimeNow() < 600) {
-        // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
-        teste.createNewGeneration();
-
-        if (tGA.getTimeNow() > printTime) {
-            filepath = outputPath + "GA/" + std::to_string(printTime) + ".csv";
-            teste.best.print(filepath);
-            printTime += 30;
-        }
     }
-    tGA.~Timer();
-    // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
+
+    // str outputPath = "Outputs/" + std::to_string(version) + "/" + filename + "/";
+
 
 }
