@@ -23,20 +23,19 @@ Greedy::Greedy(std::vector<GuardType>& guard_types, Terrain& dem) {
 }
 
 bool Greedy::advance(Situation& curr) {
-    bool hasGuards = curr.calculate_possibilities();
+    bool hasGuards = curr.calculate_newPossibilities();
     if(hasGuards) {
-        auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-        // curr.possibilities.sort([](const NewAlloc& a, const NewAlloc& b){return b < a;});
+        auto bestAlloc = std::min_element(curr.newPossibilities.begin(), curr.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
         curr.insertNewAlloc(*bestAlloc);
     }
     return hasGuards;
 }
 
 bool Greedy::advance_if_OF_gt_1(Situation& curr) {
-    curr.calculate_possibilities();
-    auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+    curr.calculate_newPossibilities();
+    auto bestAlloc = std::min_element(curr.newPossibilities.begin(), curr.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
     
-    if(curr.possibilities.empty() || bestAlloc->OF_inc < 0.0)
+    if(curr.newPossibilities.empty() || bestAlloc->OF_inc < 0.0)
         return false;
 
     curr.insertNewAlloc(*bestAlloc);
@@ -69,9 +68,9 @@ void LS::only_one_neigh(Situation& curr, int neighborhood, int improv) {
         int i = 0;
         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
             curr.switchPos(alloc);
-            auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(curr.possibilities.empty() || bestAlloc->OF_inc <= 0) {
-                curr.possibilities.clear();
+            auto bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
+            if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
+                curr.subPossibilities.clear();
             }
             else {
                 curr.replaceAlloc(*bestAlloc, alloc, 0);
@@ -81,9 +80,9 @@ void LS::only_one_neigh(Situation& curr, int neighborhood, int improv) {
         int i = 0;
         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
             curr.switchGuard(alloc);
-            auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(curr.possibilities.empty() || bestAlloc->OF_inc <= 0) {
-                curr.possibilities.clear();
+            auto bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
+            if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
+                curr.subPossibilities.clear();
             }
             else {
                 curr.replaceAlloc(*bestAlloc, alloc, 1);
@@ -93,9 +92,9 @@ void LS::only_one_neigh(Situation& curr, int neighborhood, int improv) {
         int i = 0;
         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
             curr.switchAngle(alloc);
-            auto bestAlloc = std::min_element(curr.possibilities.begin(), curr.possibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-            if(curr.possibilities.empty() || bestAlloc->OF_inc <= 0) {
-                curr.possibilities.clear();
+            auto bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
+            if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
+                curr.subPossibilities.clear();
             }
             else {
                 curr.replaceAlloc(*bestAlloc, alloc, 2);

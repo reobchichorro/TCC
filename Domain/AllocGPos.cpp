@@ -60,10 +60,10 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& position, const 
     this->guard = &guard_type;
     this->x = position.x; this->y = position.y;
     int h = guard_type.height;
-    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315
-    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
+    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315, self
+    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     // int radius_index = guard_type.radius/5 - 1;
 
@@ -103,7 +103,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& position, const 
                             sector_covered_points[6]++;
                         else
                             sector_covered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_covered_points[8]++;
                 } else if(covered[i][j]==1) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj)
@@ -125,7 +126,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& position, const 
                             sector_twiceCovered_points[6]++;
                         else
                             sector_twiceCovered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_twiceCovered_points[8]++;
                 }
             }
         }
@@ -136,10 +138,10 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
     this->guard = &guard_type;
     this->x = newPosition.x; this->y = newPosition.y;
     int h = guard_type.height;
-    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315
-    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
+    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315, self
+    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     
     int radius = guard_type.radius*covered.size()/100;
     int start = std::max(0, newPosition.x - radius);
@@ -147,36 +149,19 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
     int i = start;
 
     int ii, jj;
-    
+    int iii, jjj; bool isOld;
+
     for(int line=0; line<newPosition.limits_row.at(guard_type.radius).size(); line++, i++) {
         for(int j=newPosition.limits_row.at(guard_type.radius)[line].first; j<=newPosition.limits_row.at(guard_type.radius)[line].second; j++) {
             ii = i - newPosition.x;
             jj = j - newPosition.y;
-            // if(newPosition.shed[i][j] && (covered[i][j]-(int)oldPosition.shed[i][j])==0) {
-            //     if(ii <= 0 && jj > 0) {
-            //         if(ii > -jj)
-            //             sector_covered_points[0]++;
-            //         else
-            //             sector_covered_points[1]++;
-            //     } else if(ii < 0 && jj <= 0) {
-            //         if(ii < jj)
-            //             sector_covered_points[2]++;
-            //         else
-            //             sector_covered_points[3]++;
-            //     } else if(ii >= 0 && jj < 0) {
-            //         if(ii < -jj)
-            //             sector_covered_points[4]++;
-            //         else
-            //             sector_covered_points[5]++;
-            //     } else if(ii > 0 && jj >= 0) {
-            //         if(ii > jj)
-            //             sector_covered_points[6]++;
-            //         else
-            //             sector_covered_points[7]++;
-            //     }
-            // }
+
+            iii = i - oldPosition.x;
+            jjj = j - oldPosition.y;
+            isOld = (iii*iii)+(jjj*jjj) <= radius*radius;
+
             if(newPosition.shed.at(h)[i][j]) {
-                if(covered[i][j]-oldPosition.shed.at(h)[i][j]==0) {
+                if(covered[i][j] - (oldPosition.shed.at(h)[i][j]&&isOld) == 0) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj)
                             sector_covered_points[0]++;
@@ -197,8 +182,9 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
                             sector_covered_points[6]++;
                         else
                             sector_covered_points[7]++;
-                    }
-                } else if(covered[i][j]-oldPosition.shed.at(h)[i][j]==1) {
+                    } else if(ii==0 && jj==0)
+                        sector_covered_points[8]++;
+                } else if(covered[i][j] - (oldPosition.shed.at(h)[i][j]&&isOld) ==1) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj)
                             sector_twiceCovered_points[0]++;
@@ -219,7 +205,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
                             sector_twiceCovered_points[6]++;
                         else
                             sector_twiceCovered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_twiceCovered_points[8]++;
                 }
             }
         }
@@ -233,29 +220,6 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
         for(int j=oldPosition.limits_row.at(guard_type.radius)[line].first; j<=oldPosition.limits_row.at(guard_type.radius)[line].second; j++) {
             ii = i - oldPosition.x;
             jj = j - oldPosition.y;
-            // if(oldPosition.shed[i][j] && covered[i][j]==1) {
-            //     if(ii <= 0 && jj > 0) {
-            //         if(ii > -jj)
-            //             sector_old_covered_points[0]++;
-            //         else
-            //             sector_old_covered_points[1]++;
-            //     } else if(ii < 0 && jj <= 0) {
-            //         if(ii < jj)
-            //             sector_old_covered_points[2]++;
-            //         else
-            //             sector_old_covered_points[3]++;
-            //     } else if(ii >= 0 && jj < 0) {
-            //         if(ii < -jj)
-            //             sector_old_covered_points[4]++;
-            //         else
-            //             sector_old_covered_points[5]++;
-            //     } else if(ii > 0 && jj >= 0) {
-            //         if(ii > jj)
-            //             sector_old_covered_points[6]++;
-            //         else
-            //             sector_old_covered_points[7]++;
-            //     }
-            // }
             if(oldPosition.shed.at(h)[i][j]) {
                 if(covered[i][j]==1) {
                     if(ii <= 0 && jj > 0) {
@@ -278,7 +242,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
                             sector_old_covered_points[6]++;
                         else
                             sector_old_covered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_old_covered_points[8]++;
                 } else if(covered[i][j]==2) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj)
@@ -300,7 +265,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const Observer& oldPosition, con
                             sector_old_twiceCovered_points[6]++;
                         else
                             sector_old_twiceCovered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_old_twiceCovered_points[8]++;
                 }
             }
         }
@@ -311,10 +277,10 @@ GuardPos::GuardPos(const GuardType& guard_type, const GuardType& newGuard, const
     this->guard = &newGuard;
     this->x = position.x; this->y = position.y;
     int h = guard_type.height;
-    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315
-    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
+    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315, self
+    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     int maxRadius = (std::max(guard_type.radius, newGuard.radius));
     
     int oldRadius = guard_type.radius*covered.size()/100;
@@ -325,6 +291,19 @@ GuardPos::GuardPos(const GuardType& guard_type, const GuardType& newGuard, const
 
     int ii, jj;
     bool isOld, isNew;
+
+    // int angle_min = oldAngle/45;
+    // int angle_max = ((oldAngle + guard_type.angle)%360)/45;
+    // std::vector<bool> sectors(8, false);
+    // if(angle_min < angle_max) {
+    //     for(int idx = angle_min; idx<angle_max; idx++)
+    //         sectors[idx] = true;
+    // } else {
+    //     for(int idx = angle_min; idx<8; idx++)
+    //         sectors[idx] = true;
+    //     for(int idx = 0; idx<angle_max; idx++)
+    //         sectors[idx] = true;
+    // }
     
     for(int line=0; line<position.limits_row.at(maxRadius).size(); line++, i++) {
         for(int j=position.limits_row.at(maxRadius)[line].first; j<=position.limits_row.at(maxRadius)[line].second; j++) {
@@ -355,7 +334,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const GuardType& newGuard, const
                             sector_covered_points[6]++;
                         else
                             sector_covered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_covered_points[8]++;
                 } else if(covered[i][j]-isOld==1 && isNew) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj)
@@ -377,7 +357,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const GuardType& newGuard, const
                             sector_twiceCovered_points[6]++;
                         else
                             sector_twiceCovered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_twiceCovered_points[8]++;
                 }
 
                 if(covered[i][j]==1 && isOld) {
@@ -401,7 +382,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const GuardType& newGuard, const
                             sector_old_covered_points[6]++;
                         else
                             sector_old_covered_points[7]++;
-                    }  
+                    } else if(ii==0 && jj==0)
+                        sector_old_covered_points[8]++;
                 } else if(covered[i][j]==2 && isOld) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj)
@@ -423,7 +405,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const GuardType& newGuard, const
                             sector_old_twiceCovered_points[6]++;
                         else
                             sector_old_twiceCovered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_old_twiceCovered_points[8]++;
                 }
         
             }
@@ -435,10 +418,10 @@ GuardPos::GuardPos(const GuardType& guard_type, const int oldAngle, const Observ
     this->guard = &guard_type;
     this->x = position.x; this->y = position.y;
     int h = guard_type.height;
-    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315
-    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0};
-    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0};
+    sector_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0}; //0, 45, 90, 135, 180, 225, 270, 315, self
+    sector_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_covered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    sector_old_twiceCovered_points = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     int angle_min = oldAngle/45;
     int angle_max = ((oldAngle + guard_type.angle)%360)/45;
@@ -488,7 +471,8 @@ GuardPos::GuardPos(const GuardType& guard_type, const int oldAngle, const Observ
                             sector_covered_points[6]++;
                         else
                             sector_covered_points[7]++;
-                    }
+                    } else if(ii==0 && jj==0)
+                        sector_covered_points[8]++;
                 } else if(covered[i][j]==1) {
                     if(ii <= 0 && jj > 0) {
                         if(ii > -jj) {
@@ -534,6 +518,9 @@ GuardPos::GuardPos(const GuardType& guard_type, const int oldAngle, const Observ
                             sector_old_covered_points[7]++;
                             sector_twiceCovered_points[7] += !sectors[7];
                         }
+                    } else if(ii==0 && jj==0) {
+                        sector_covered_points[8]++;
+                        sector_old_covered_points[8]++;
                     }
                 }  else if(covered[i][j]==2) {
                     if(ii <= 0 && jj > 0) {
@@ -572,6 +559,9 @@ GuardPos::GuardPos(const GuardType& guard_type, const int oldAngle, const Observ
                             sector_old_twiceCovered_points[7]++;
                             sector_twiceCovered_points[7] += sectors[7];
                         }
+                    } else if(ii==0 && jj==0) {
+                        sector_old_twiceCovered_points[8]++;
+                        sector_twiceCovered_points[8]++;
                     }
                 }
             }
@@ -616,49 +606,74 @@ long long int GuardPos::calculateOF_inc(const int angle, long long int& numCover
         }
     }
 
-        // OF = (80000*numCovered + 20000*numTwiceCovered)/(dem->nrows*dem->nrows) - iCost;
-    if(hasOld)
-        OF_inc = 4*(numCovered_inc - numOldCovered_inc) + (numTwiceCovered_inc - numOldTwiceCovered_inc);
-    else
-        OF_inc = 4*numCovered_inc + numTwiceCovered_inc - this->guard->icost;
+    numCovered_inc += this->sector_covered_points[8];
+    numTwiceCovered_inc += this->sector_twiceCovered_points[8];
+    numOldCovered_inc += this->sector_old_covered_points[8];
+    numOldTwiceCovered_inc += this->sector_old_twiceCovered_points[8];
 
     numCovered_diff = numCovered_inc - numOldCovered_inc;
     numTwiceCovered_diff = numTwiceCovered_inc - numOldTwiceCovered_inc;
 
+        // OF = (80000*numCovered + 20000*numTwiceCovered)/(dem->nrows*dem->nrows) - iCost;
+    if(hasOld)
+        OF_inc = 4*numCovered_diff + numTwiceCovered_diff;
+    else
+        OF_inc = 4*numCovered_inc + numTwiceCovered_inc - this->guard->icost;
+
     return OF_inc;
 }
 
-long long int GuardPos::calculateOF_incGuard(const int angle, long long int oldICost, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld=false) {
+long long int GuardPos::calculateOF_incGuard(const int angle, const GuardType* oldGuard, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld=false) {
     long long int OF_inc = 0;
     long long int numCovered_inc = 0;
     long long int numTwiceCovered_inc = 0;
     long long int numOldCovered_inc = 0;
     long long int numOldTwiceCovered_inc = 0;
 
+    long long int oldICost = oldGuard->icost;
+
     int angle_min = angle/45;
-    int angle_max = ((angle + this->guard->angle)%360)/45;
+    int angle_max = ((angle + oldGuard->angle)%360)/45;
 
     if(angle_min < angle_max) {
         for(int i = angle_min; i<angle_max; i++) {
-            numCovered_inc += this->sector_covered_points[i];
-            numTwiceCovered_inc += this->sector_twiceCovered_points[i];
             numOldCovered_inc += this->sector_old_covered_points[i];
             numOldTwiceCovered_inc += this->sector_old_twiceCovered_points[i];
         }
     } else {
         for(int i = angle_min; i<8; i++) {
-            numCovered_inc += this->sector_covered_points[i];
-            numTwiceCovered_inc += this->sector_twiceCovered_points[i];
             numOldCovered_inc += this->sector_old_covered_points[i];
             numOldTwiceCovered_inc += this->sector_old_twiceCovered_points[i];
         }
         for(int i = 0; i<angle_max; i++) {
-            numCovered_inc += this->sector_covered_points[i];
-            numTwiceCovered_inc += this->sector_twiceCovered_points[i];
             numOldCovered_inc += this->sector_old_covered_points[i];
             numOldTwiceCovered_inc += this->sector_old_twiceCovered_points[i];
         }
     }
+
+    angle_min = angle/45;
+    angle_max = ((angle + this->guard->angle)%360)/45;
+
+    if(angle_min < angle_max) {
+        for(int i = angle_min; i<angle_max; i++) {
+            numCovered_inc += this->sector_covered_points[i];
+            numTwiceCovered_inc += this->sector_twiceCovered_points[i];            
+        }
+    } else {
+        for(int i = angle_min; i<8; i++) {
+            numCovered_inc += this->sector_covered_points[i];
+            numTwiceCovered_inc += this->sector_twiceCovered_points[i];            
+        }
+        for(int i = 0; i<angle_max; i++) {
+            numCovered_inc += this->sector_covered_points[i];
+            numTwiceCovered_inc += this->sector_twiceCovered_points[i];            
+        }
+    }
+
+    numCovered_inc += this->sector_covered_points[8];
+    numTwiceCovered_inc += this->sector_twiceCovered_points[8];
+    numOldCovered_inc += this->sector_old_covered_points[8];
+    numOldTwiceCovered_inc += this->sector_old_twiceCovered_points[8];
 
         // OF = (80000*numCovered + 20000*numTwiceCovered)/(dem->nrows*dem->nrows) - iCost;
     if(hasOld)
@@ -721,6 +736,11 @@ long long int GuardPos::calculateOF_incAngle(const int oldAngle, const int newAn
             numTwiceCovered_inc += this->sector_twiceCovered_points[i];
         }
     }
+
+    numCovered_inc += this->sector_covered_points[8];
+    numTwiceCovered_inc += this->sector_twiceCovered_points[8];
+    numOldCovered_inc += this->sector_old_covered_points[8];
+    numOldTwiceCovered_inc += this->sector_old_twiceCovered_points[8];
 
         // OF = (80000*numCovered + 20000*numTwiceCovered)/(dem->nrows*dem->nrows) - iCost;
     if(hasOld)

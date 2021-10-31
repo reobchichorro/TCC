@@ -14,6 +14,7 @@
 #include "Terrain.h"
 #include "GuardType.h"
 #include "AllocGPos.h"
+#include "SubAlloc.h"
 #include "Situation.h"
 
 #define eps 1e-6
@@ -103,7 +104,7 @@ void Situation::print(str& filepath) {
     file.close();
 }
 
-bool Situation::calculate_possibilities() {
+bool Situation::calculate_newPossibilities() {
     long long int OF_inc;
     long long int numCovered_inc;
     long long int numTwiceCovered_inc;
@@ -114,17 +115,17 @@ bool Situation::calculate_possibilities() {
             GuardPos possibility(guard_types->at(i), position, covered);
             if(guard_types->at(i).angle == 360) {
                 OF_inc = possibility.calculateOF_inc(0, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
-                possibilities.push_back(NewAlloc(0, possibility, position, i, OF_inc, numCovered_inc, numTwiceCovered_inc));
+                newPossibilities.push_back(NewAlloc(0, possibility, position, i, OF_inc, numCovered_inc, numTwiceCovered_inc));
             }
             else {
                 for(int angle: angles) {
                     OF_inc = possibility.calculateOF_inc(angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
-                    possibilities.push_back(NewAlloc(angle, possibility, position, i, OF_inc, numCovered_inc, numTwiceCovered_inc));
+                    newPossibilities.push_back(NewAlloc(angle, possibility, position, i, OF_inc, numCovered_inc, numTwiceCovered_inc));
                 }
             }
         }
     }
-    return !possibilities.empty();
+    return !newPossibilities.empty();
 }
 
 void Situation::updateCovered(Allocation& alloc) {
@@ -179,7 +180,8 @@ void Situation::updateCovered(Allocation& alloc) {
                         covered[i][j] += sectors[6];
                     else
                         covered[i][j] += sectors[7];
-                }
+                } else if(ii == 0 && jj == 0)
+                    covered[i][j]++;
             }
         }
     }
@@ -193,7 +195,18 @@ void Situation::insertNewAlloc(NewAlloc& newAlloc) {
     iCost += newAlloc.alloc.guard->icost;
     updateCovered(newAlloc.alloc);
     // guard_amount[newAlloc.alloc.guardidx]--;
-    possibilities.clear();
+    newPossibilities.clear();
+}
+
+void Situation::switchSubAlloc(SubAlloc& subAlloc) {
+    allocations.push_back(subAlloc.alloc);
+    OF += subAlloc.OF_diff;
+    numCovered += subAlloc.numCovered_diff;
+    numTwiceCovered += subAlloc.numTwiceCovered_diff;
+    iCost += subAlloc.icost_diff;
+    // updateCovered(subAlloc.alloc); TODO
+    // guard_amount[newAlloc.alloc.guardidx]--;
+    newPossibilities.clear();
 }
 
 bool Situation::addRandomNewAlloc() {
@@ -263,7 +276,8 @@ void Situation::updateCovered_Pos(Allocation& alloc, const Observer* oldPos) {
                         covered[i][j] += sectors[6];
                     else
                         covered[i][j] += sectors[7];
-                }
+                } else if(ii == 0 && jj == 0)
+                    covered[i][j]++;
             }
         }
     }
@@ -298,7 +312,8 @@ void Situation::updateCovered_Pos(Allocation& alloc, const Observer* oldPos) {
                         covered[i][j] -= sectors[6];
                     else
                         covered[i][j] -= sectors[7];
-                }
+                } else if(ii == 0 && jj == 0)
+                    covered[i][j]--;
             }
         }
     }
@@ -357,9 +372,25 @@ void Situation::updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard
                         covered[i][j] += sectors[6];
                     else
                         covered[i][j] += sectors[7];
-                }
+                } else if(ii == 0 && jj == 0)
+                    covered[i][j]++;
             }
         }
+    }
+
+
+    angle_min = alloc.angle/45;
+    angle_max = ((alloc.angle + oldGuard->angle)%360)/45;
+
+    sectors = {false, false, false, false, false, false, false, false};
+    if(angle_min < angle_max) {
+        for(int idx = angle_min; idx<angle_max; idx++)
+            sectors[idx] = true;
+    } else {
+        for(int idx = angle_min; idx<8; idx++)
+            sectors[idx] = true;
+        for(int idx = 0; idx<angle_max; idx++)
+            sectors[idx] = true;
     }
 
     x = position->x; y = position->x;
@@ -393,7 +424,8 @@ void Situation::updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard
                         covered[i][j] -= sectors[6];
                     else
                         covered[i][j] -= sectors[7];
-                }
+                } else if(ii == 0 && jj == 0)
+                    covered[i][j]--;
             }
         }
     }
@@ -482,21 +514,21 @@ void Situation::updateCovered_Angle(Allocation& alloc, const int oldAngle) {
     }
 }
 
-void Situation::replaceAlloc(NewAlloc& newAlloc, std::list<Allocation>::iterator& oldAlloc, int mod) {
-    
-    auto newIt = allocations.insert(oldAlloc, newAlloc.alloc);
-    OF += newAlloc.OF_inc;
-    numCovered += newAlloc.numCovered_inc;
-    numTwiceCovered += newAlloc.numTwiceCovered_inc;
+void Situation::replaceAlloc(SubAlloc& subAlloc, std::list<Allocation>::iterator& oldAlloc, int mod) {
+    auto newIt = allocations.insert(oldAlloc, subAlloc.alloc);
+    OF += subAlloc.OF_diff;
+    numCovered += subAlloc.numCovered_diff;
+    numTwiceCovered += subAlloc.numTwiceCovered_diff;
+    iCost += subAlloc.icost_diff;
     if(mod == 0)
-        updateCovered_Pos(newAlloc.alloc, oldAlloc->position);
+        updateCovered_Pos(subAlloc.alloc, oldAlloc->position);
     else if(mod==1)
-        updateCovered_Guard(newAlloc.alloc, oldAlloc->guard);
+        updateCovered_Guard(subAlloc.alloc, oldAlloc->guard);
     else if(mod==2)
-        updateCovered_Angle(newAlloc.alloc, oldAlloc->angle);
+        updateCovered_Angle(subAlloc.alloc, oldAlloc->angle);
     allocations.erase(oldAlloc);
     oldAlloc = newIt;
-    possibilities.clear();
+    subPossibilities.clear();
 }
 
 void Situation::switchPos(std::list<Allocation>::iterator& alloc) {
@@ -507,12 +539,10 @@ void Situation::switchPos(std::list<Allocation>::iterator& alloc) {
 
     for(const Observer& newPosition: dem->best_observers) {
         if(rand()%100 >= 40) continue;
-        GuardPos possibility(*guard, *pos, newPosition, covered);
+        if(newPosition.x == pos->x && newPosition.y == pos->y) continue;
 
-        long long int numCovered_inc, numTwiceCovered_inc;
-        long long int OF_inc = possibility.calculateOF_inc(angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, true);
-
-        possibilities.push_back(NewAlloc(angle, possibility, newPosition, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+        Allocation newAlloc(angle, guard, newPosition, guardidx);
+        subPossibilities.push_back(SubAlloc(*alloc, newAlloc, dem->nrows, covered));
     }
 }
 
@@ -523,12 +553,16 @@ void Situation::switchGuard(std::list<Allocation>::iterator& alloc) {
     int guardidx = alloc->guardidx;
 
     for(const GuardType& newGuard: *guard_types) {
-        GuardPos possibility(*guard, newGuard, *pos, covered);
+        if (newGuard.name == guard->name) continue;
+        // GuardPos possibility(*guard, newGuard, *pos, covered);
 
-        long long int numCovered_inc, numTwiceCovered_inc;
-        long long int OF_inc = possibility.calculateOF_incGuard(angle, guard->icost, numCovered_inc, numTwiceCovered_inc, dem->nrows, true);
+        // long long int numCovered_inc, numTwiceCovered_inc;
+        // long long int OF_inc = possibility.calculateOF_incGuard(angle, guard, numCovered_inc, numTwiceCovered_inc, dem->nrows, true);
 
-        possibilities.push_back(NewAlloc(angle, possibility, *pos, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+        // possibilities.push_back(NewAlloc(angle, possibility, *pos, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+
+        Allocation newAlloc(angle, newGuard, *pos, guardidx);
+        subPossibilities.push_back(SubAlloc(*alloc, newAlloc, dem->nrows, covered));
     }
 }
 
@@ -541,10 +575,14 @@ void Situation::switchAngle(std::list<Allocation>::iterator& alloc) {
 
     GuardPos possibility(*guard, angle, *pos, covered);
     for(int newAngle=0; newAngle<360; newAngle+=45) {
+        if(newAngle == angle) continue;
 
-        long long int numCovered_inc, numTwiceCovered_inc;
-        long long int OF_inc = possibility.calculateOF_incAngle(angle, newAngle, numCovered_inc, numTwiceCovered_inc, dem->nrows, true);
+        // long long int numCovered_inc, numTwiceCovered_inc;
+        // long long int OF_inc = possibility.calculateOF_incAngle(angle, newAngle, numCovered_inc, numTwiceCovered_inc, dem->nrows, true);
 
-        possibilities.push_back(NewAlloc(angle, possibility, *pos, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+        // possibilities.push_back(NewAlloc(angle, possibility, *pos, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+
+        Allocation newAlloc(newAngle, guard, *pos, guardidx);
+        subPossibilities.push_back(SubAlloc(*alloc, newAlloc, dem->nrows, covered));
     }
 }

@@ -11,7 +11,7 @@
 #include "Utils/Utils.h"
 
 typedef std::string str;
-int version = 0;
+int version = 2;
 
 str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 
@@ -94,12 +94,15 @@ int main(int argc, char** argv) {
     str filepath = outputPath + "GreedyLS/" + std::to_string(tGreedyLS.getTimeNow()) + ".csv";
     currSit.print(filepath);
     tGreedyLS.~Timer();
+    currSit.calculate_OF();
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
+
 
     Timer tILS("ILS");
     ILS test(guard_types, dem);
     int it = 0;
     int printTime = 0;
-    while(tILS.getTimeNow() < 600) {
+    while(tILS.getTimeNow() < 180) {
         test.solve(currSit, it%3);
         it++;
         if (tILS.getTimeNow() > printTime) {
@@ -108,14 +111,17 @@ int main(int argc, char** argv) {
             printTime += 30;
         }
     }
+    
     tILS.~Timer();
+    currSit.calculate_OF();
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
 
     msg = "GA";
     Timer tGA(msg);
     GA teste(guard_types, dem);
     printTime = 0;
     str toPrint = ""; teste.best.print(toPrint);
-    while(tGA.getTimeNow() < 600) {
+    while(tGA.getTimeNow() < 180) {
         // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
         teste.createNewGeneration();
 
@@ -126,6 +132,8 @@ int main(int argc, char** argv) {
         }
     }
     tGA.~Timer();
-    // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
+
+    teste.best.calculate_OF();
+    std::cout << teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
 
 }

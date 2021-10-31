@@ -53,15 +53,29 @@ void ILS::perturb(Situation& sStar, Situation& s1) {
 void ILS::solve(Situation& curr, int i) {
     str toPrint = "";
 
+    long long int a, b;
+
     Situation s1(*guard_types, *dem);
     perturb(curr, s1);
-    // std::cout << s1.calculate_OF() << "s1\n";
+
+    a = s1.OF; b = s1.calculate_OF();
+    if(a != b)
+        std::cout << a << " " << b << "s1\n";
+
     Greedy s1g(*guard_types, *dem);
     s1g.solve(s1);
-    // std::cout << s1.calculate_OF() << "s1g\n";
+
+    a = s1.OF; b = s1.calculate_OF();
+    if(a != b)
+        std::cout << a << " " << b << "s1\n";
+
     LS s1Star(*guard_types, *dem);
     s1Star.only_one_neigh(s1, i, 0);
-    // std::cout << s1.calculate_OF() << "s1Star\n";
+
+    a = s1.OF; b = s1.calculate_OF();
+    if(a != b)
+        std::cout << a << " " << b << "s1\n";
+        
     if(s1.OF > curr.OF) {
         curr = s1;
     }

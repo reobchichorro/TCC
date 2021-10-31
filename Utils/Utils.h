@@ -13,6 +13,11 @@
 
 typedef std::string str;
 
+#ifndef __GETSECTOR_
+#define __GETSECTOR_
+    int getSector(int ii, int jj);
+#endif
+
 #ifndef __DOUBLEOPS_
 #define __DOUBLEOPS_
 class DoubleOps {
