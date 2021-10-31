@@ -83,6 +83,10 @@ int main(int argc, char** argv) {
     dem.fill_best_observers(site_folder, input.test_case_name, input.roi_folder, guard_radii, guard_heights);
 
     str outputPath = "Outputs/" + std::to_string(version) + "/" + filename + "/";
+    std::filesystem::create_directory(outputPath);
+    std::filesystem::create_directory(outputPath+"GreedyLS/");
+    std::filesystem::create_directory(outputPath+"ILS/");
+    std::filesystem::create_directory(outputPath+"GA/");
 
     str msg = "Greedy+LS";
     Timer tGreedyLS(msg);
@@ -102,7 +106,7 @@ int main(int argc, char** argv) {
     ILS test(guard_types, dem);
     int it = 0;
     int printTime = 0;
-    while(tILS.getTimeNow() < 180) {
+    while(tILS.getTimeNow() < 120) {
         test.solve(currSit, it%3);
         it++;
         if (tILS.getTimeNow() > printTime) {
@@ -121,7 +125,7 @@ int main(int argc, char** argv) {
     GA teste(guard_types, dem);
     printTime = 0;
     str toPrint = ""; teste.best.print(toPrint);
-    while(tGA.getTimeNow() < 180) {
+    while(tGA.getTimeNow() < 120) {
         // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
         teste.createNewGeneration();
 
