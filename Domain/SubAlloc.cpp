@@ -70,32 +70,69 @@ SubAlloc::SubAlloc(std::list<Allocation>::iterator& oldAlloc, Allocation& newAll
     bool oldAngle, newAngle;
 
     bool wasCovering, willCover;
-    for(int i=0; i<nrows; i++) {
-        for(int j=0; j<nrows; j++) {
-            oi = i - oldAlloc->position->x; oj = j - oldAlloc->position->y;
-            ni = i - newAlloc.position->x; nj = j - newAlloc.position->y;
 
-            insideOld = oi*oi + oj*oj <= oldRadius*oldRadius;
-            insideNew = ni*ni + nj*nj <= newRadius*newRadius;
+    if(oldAlloc->position == newAlloc.position) {
+        int maxRadius = std::max(oldAlloc->guard->radius, newAlloc.guard->radius);
+        int maxRad = maxRadius*nrows/100;
+        int start = std::max(0, newAlloc.position->x - maxRad);
+        int stop = std::min((int)covered.size()-1, newAlloc.position->x + maxRad);
+        int i = start;
 
-            oldSector = getSector(oi, oj);
-            newSector = getSector(ni, nj);
-            oldAngle = (oldSector != 8) ? oldSectors[oldSector] : true;
-            newAngle = (newSector != 8) ? newSectors[newSector] : true;
+        for(int line=0; line<newAlloc.position->limits_row.at(maxRadius).size(); line++, i++) {
+            for(int j=newAlloc.position->limits_row.at(maxRadius)[line].first; j<=newAlloc.position->limits_row.at(maxRadius)[line].second; j++) {
+                oi = i - oldAlloc->position->x; oj = j - oldAlloc->position->y;
+                ni = i - newAlloc.position->x; nj = j - newAlloc.position->y;
 
-            wasCovering = (covered[i][j] > 0) && insideOld && oldAngle && oldAlloc->position->shed.at(oh)[i][j];
-            willCover = insideNew && newAngle && newAlloc.position->shed.at(nh)[i][j];
+                insideOld = oi*oi + oj*oj <= oldRadius*oldRadius;
+                insideNew = ni*ni + nj*nj <= newRadius*newRadius;
 
-            if(covered[i][j] == 0 && !wasCovering && willCover)
-                numCovered_diff++;
-            else if(covered[i][j] == 1 && !wasCovering && willCover)
-                numTwiceCovered_diff++;
-            else if(covered[i][j] == 1 && wasCovering && !willCover)
-                numCovered_diff--;
-            else if(covered[i][j] == 2 && wasCovering && !willCover)
-                numTwiceCovered_diff--;
+                oldSector = getSector(oi, oj);
+                newSector = getSector(ni, nj);
+                oldAngle = (oldSector != 8) ? oldSectors[oldSector] : true;
+                newAngle = (newSector != 8) ? newSectors[newSector] : true;
+
+                wasCovering = (covered[i][j] > 0) && insideOld && oldAngle && oldAlloc->position->shed.at(oh)[i][j];
+                willCover = insideNew && newAngle && newAlloc.position->shed.at(nh)[i][j];
+
+                if(covered[i][j] == 0 && !wasCovering && willCover)
+                    numCovered_diff++;
+                else if(covered[i][j] == 1 && !wasCovering && willCover)
+                    numTwiceCovered_diff++;
+                else if(covered[i][j] == 1 && wasCovering && !willCover)
+                    numCovered_diff--;
+                else if(covered[i][j] == 2 && wasCovering && !willCover)
+                    numTwiceCovered_diff--;
+            }
+        }
+    } else {
+        for(int i=0; i<nrows; i++) {
+            for(int j=0; j<nrows; j++) {
+                oi = i - oldAlloc->position->x; oj = j - oldAlloc->position->y;
+                ni = i - newAlloc.position->x; nj = j - newAlloc.position->y;
+
+                insideOld = oi*oi + oj*oj <= oldRadius*oldRadius;
+                insideNew = ni*ni + nj*nj <= newRadius*newRadius;
+
+                oldSector = getSector(oi, oj);
+                newSector = getSector(ni, nj);
+                oldAngle = (oldSector != 8) ? oldSectors[oldSector] : true;
+                newAngle = (newSector != 8) ? newSectors[newSector] : true;
+
+                wasCovering = (covered[i][j] > 0) && insideOld && oldAngle && oldAlloc->position->shed.at(oh)[i][j];
+                willCover = insideNew && newAngle && newAlloc.position->shed.at(nh)[i][j];
+
+                if(covered[i][j] == 0 && !wasCovering && willCover)
+                    numCovered_diff++;
+                else if(covered[i][j] == 1 && !wasCovering && willCover)
+                    numTwiceCovered_diff++;
+                else if(covered[i][j] == 1 && wasCovering && !willCover)
+                    numCovered_diff--;
+                else if(covered[i][j] == 2 && wasCovering && !willCover)
+                    numTwiceCovered_diff--;
+            }
         }
     }
+
 
     OF_diff = 4*numCovered_diff + numTwiceCovered_diff - icost_diff;
     this->alloc = newAlloc;

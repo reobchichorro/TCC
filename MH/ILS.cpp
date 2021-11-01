@@ -58,23 +58,11 @@ void ILS::solve(Situation& curr, int i) {
     Situation s1(*guard_types, *dem);
     perturb(curr, s1);
 
-    a = s1.OF; b = s1.calculate_OF();
-    if(a != b)
-        std::cout << a << " " << b << "s1\n";
-
     Greedy s1g(*guard_types, *dem);
     s1g.solve(s1);
 
-    a = s1.OF; b = s1.calculate_OF();
-    if(a != b)
-        std::cout << a << " " << b << "s1\n";
-
     LS s1Star(*guard_types, *dem);
     s1Star.one_neigh_until_localopt(s1, i, 0);
-
-    a = s1.OF; b = s1.calculate_OF();
-    if(a != b)
-        std::cout << a << " " << b << "s1\n";
         
     if(s1.OF > curr.OF) {
         curr = s1;

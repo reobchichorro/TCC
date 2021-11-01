@@ -106,16 +106,12 @@ int main(int argc, char** argv) {
     Timer tILS("ILS");
     ILS test(guard_types, dem);
     int it = 0;
-    int printTime = 0;
     while(tILS.getTimeNow() < 450) {
         test.solve(currSit, it%3);
         it++;
         std::cout << it << " " << tILS.getTimeNow() << "\n";
-        if (tILS.getTimeNow() > printTime) {
-            filepath = outputPath + "ILS/" + std::to_string(printTime) + ".csv";
-            currSit.print(filepath);
-            printTime += 30;
-        }
+        filepath = outputPath + "ILS/" + std::to_string(tILS.getTimeNow()) + ".csv";
+        currSit.print(filepath);
     }
     
     tILS.~Timer();
@@ -126,18 +122,14 @@ int main(int argc, char** argv) {
     Timer tGA(msg);
     GA teste(guard_types, dem);
     it = 0;
-    printTime = 0;
     str toPrint = ""; teste.best.print(toPrint);
     while(tGA.getTimeNow() < 450) {
         // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
         teste.createNewGeneration();
         it++;
         std::cout << it << " " << tGA.getTimeNow() << "\n";
-        if (tGA.getTimeNow() > printTime) {
-            filepath = outputPath + "GA/" + std::to_string(printTime) + ".csv";
-            teste.best.print(filepath);
-            printTime += 30;
-        }
+        filepath = outputPath + "GA/" + std::to_string(tGA.getTimeNow()) + ".csv";
+        teste.best.print(filepath);
     }
     tGA.~Timer();
 
