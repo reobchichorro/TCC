@@ -70,7 +70,7 @@ public:
     void updateCovered_Pos(Allocation& alloc, const Observer* oldPos);
     void updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard);
     void updateCovered_Angle(Allocation& alloc, const int oldAngle);
-    void replaceAlloc(SubAlloc& subAlloc, std::list<Allocation>::iterator& oldAlloc, int mod);
+    void replaceAlloc(SubAlloc& subAlloc, int mod);
     void switchPos(std::list<Allocation>::iterator& alloc);
     void switchGuard(std::list<Allocation>::iterator& alloc);
     void switchAngle(std::list<Allocation>::iterator& alloc);

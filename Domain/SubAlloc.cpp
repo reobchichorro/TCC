@@ -20,31 +20,32 @@
 #define all(v) v.begin(),v.end()
 typedef std::string str;
 
-SubAlloc::SubAlloc(const Allocation& oldAlloc, Allocation& newAlloc, const int nrows, const std::vector<std::vector<short int>>& covered) {
+SubAlloc::SubAlloc(std::list<Allocation>::iterator& oldAlloc, Allocation& newAlloc, const int nrows, const std::vector<std::vector<short int>>& covered) {
     // alloc = Allocation(angle, guardPos.guard, position, gidx);
+    this->oldAlloc = oldAlloc;
     this->OF_diff = 0;
     this->numCovered_diff = 0;
     this->numTwiceCovered_diff = 0;
-    this->icost_diff = newAlloc.guard->icost - oldAlloc.guard->icost;
+    this->icost_diff = newAlloc.guard->icost - oldAlloc->guard->icost;
 
     //Setting up heights
-    int oh = oldAlloc.guard->height;
+    int oh = oldAlloc->guard->height;
     int nh = newAlloc.guard->height;
 
     //Setting up radii
-    int oldRadius = oldAlloc.guard->radius*nrows/100;
+    int oldRadius = oldAlloc->guard->radius*nrows/100;
     int newRadius = newAlloc.guard->radius*nrows/100;
 
     int oi, oj, ni, nj;
     bool insideOld, insideNew;
 
     //Setting up angles
-    int angle_min = oldAlloc.angle/45;
-    int angle_max = ((oldAlloc.angle + oldAlloc.guard->angle)%360)/45;
+    int angle_min = oldAlloc->angle/45;
+    int angle_max = ((oldAlloc->angle + oldAlloc->guard->angle)%360)/45;
     std::vector<bool> oldSectors(8, false);
     if(angle_min < angle_max) {
         for(int idx = angle_min; idx<angle_max; idx++)
-            oldSectors[idx] = true;
+            oldSectors[idx] = true; 
     } else {
         for(int idx = angle_min; idx<8; idx++)
             oldSectors[idx] = true;
@@ -71,7 +72,7 @@ SubAlloc::SubAlloc(const Allocation& oldAlloc, Allocation& newAlloc, const int n
     bool wasCovering, willCover;
     for(int i=0; i<nrows; i++) {
         for(int j=0; j<nrows; j++) {
-            oi = i - oldAlloc.position->x; oj = j - oldAlloc.position->y;
+            oi = i - oldAlloc->position->x; oj = j - oldAlloc->position->y;
             ni = i - newAlloc.position->x; nj = j - newAlloc.position->y;
 
             insideOld = oi*oi + oj*oj <= oldRadius*oldRadius;
@@ -82,7 +83,7 @@ SubAlloc::SubAlloc(const Allocation& oldAlloc, Allocation& newAlloc, const int n
             oldAngle = (oldSector != 8) ? oldSectors[oldSector] : true;
             newAngle = (newSector != 8) ? newSectors[newSector] : true;
 
-            wasCovering = (covered[i][j] > 0) && insideOld && oldAngle && oldAlloc.position->shed.at(oh)[i][j];
+            wasCovering = (covered[i][j] > 0) && insideOld && oldAngle && oldAlloc->position->shed.at(oh)[i][j];
             willCover = insideNew && newAngle && newAlloc.position->shed.at(nh)[i][j];
 
             if(covered[i][j] == 0 && !wasCovering && willCover)

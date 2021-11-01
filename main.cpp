@@ -94,12 +94,13 @@ int main(int argc, char** argv) {
     Greedy s0(guard_types, dem);
     s0.solve(currSit);
     LS sStar(guard_types, dem);
-    sStar.only_one_neigh(currSit, 1, 0);
+    sStar.one_neigh_until_localopt(currSit, 1, 0);
     str filepath = outputPath + "GreedyLS/" + std::to_string(tGreedyLS.getTimeNow()) + ".csv";
     currSit.print(filepath);
     tGreedyLS.~Timer();
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << " a\n";
     currSit.calculate_OF();
-    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << " b\n";
 
 
     Timer tILS("ILS");

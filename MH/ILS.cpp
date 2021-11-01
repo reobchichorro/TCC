@@ -70,7 +70,7 @@ void ILS::solve(Situation& curr, int i) {
         std::cout << a << " " << b << "s1\n";
 
     LS s1Star(*guard_types, *dem);
-    s1Star.only_one_neigh(s1, i, 0);
+    s1Star.one_neigh_until_localopt(s1, i, 0);
 
     a = s1.OF; b = s1.calculate_OF();
     if(a != b)

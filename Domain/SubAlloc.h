@@ -24,12 +24,13 @@ typedef std::string str;
 class SubAlloc{
 public:
     Allocation alloc;
+    std::list<Allocation>::iterator oldAlloc;
     long long int OF_diff;
     long long int numCovered_diff;
     long long int numTwiceCovered_diff;
     long long int icost_diff;
 
-    SubAlloc(const Allocation& oldAlloc, Allocation& newAlloc, const int nrows, const std::vector<std::vector<short int>>& covered);
+    SubAlloc(std::list<Allocation>::iterator& oldAlloc, Allocation& newAlloc, const int nrows, const std::vector<std::vector<short int>>& covered);
     bool operator<(const SubAlloc& other) const;
     long double operator-(const SubAlloc& other);
 };

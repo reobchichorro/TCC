@@ -320,21 +320,21 @@ void Situation::updateCovered_Pos(Allocation& alloc, const Observer* oldPos) {
 }
 
 void Situation::updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard) {
-    const GuardType* guard = alloc.guard;
+    const GuardType* newGuard = alloc.guard;
     const Observer* position = alloc.position;
     int x = position->x; int y = position->y;
-    int hOld = oldGuard->height;
-    int hNew = guard->height;
+    int oh = oldGuard->height;
+    int nh = newGuard->height;
     
-    int radius = guard->radius*covered.size()/100;
+    volatile int radius = newGuard->radius*covered.size()/100;
     int start = std::max(0, x - radius);
     int stop = std::min((int)covered.size()-1, x + radius);
     int i = start;
 
-    int ii, jj;
+    volatile int ii, jj;
 
     int angle_min = alloc.angle/45;
-    int angle_max = ((alloc.angle + guard->angle)%360)/45;
+    int angle_max = ((alloc.angle + newGuard->angle)%360)/45;
 
     std::vector<bool> sectors(8, false);
     if(angle_min < angle_max) {
@@ -347,11 +347,11 @@ void Situation::updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard
             sectors[idx] = true;
     }
     
-    for(int line=0; line<position->limits_row.at(guard->radius).size(); line++, i++) {
-        for(int j=position->limits_row.at(guard->radius)[line].first; j<=position->limits_row.at(guard->radius)[line].second; j++) {
+    for(int line=0; line<position->limits_row.at(newGuard->radius).size(); line++, i++) {
+        for(int j=position->limits_row.at(newGuard->radius)[line].first; j<=position->limits_row.at(newGuard->radius)[line].second; j++) {
             ii = i - x;
             jj = j - y;
-            if(position->shed.at(hNew)[i][j]) {
+            if(position->shed.at(nh)[i][j]) {
                 if(ii <= 0 && jj > 0) {
                     if(ii > -jj)
                         covered[i][j] += sectors[0];
@@ -391,9 +391,9 @@ void Situation::updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard
             sectors[idx] = true;
         for(int idx = 0; idx<angle_max; idx++)
             sectors[idx] = true;
-    }
+    } 
 
-    x = position->x; y = position->x;
+    x = position->x; y = position->y;
     radius = oldGuard->radius*covered.size()/100;
     start = std::max(0, x - radius);
     stop = std::min((int)covered.size()-1, x + radius);
@@ -403,7 +403,7 @@ void Situation::updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard
         for(int j=position->limits_row.at(oldGuard->radius)[line].first; j<=position->limits_row.at(oldGuard->radius)[line].second; j++) {
             ii = i - x;
             jj = j - y;
-            if(position->shed.at(hOld)[i][j]) {
+            if(position->shed.at(oh)[i][j]) {
                 if(ii <= 0 && jj > 0) {
                     if(ii > -jj)
                         covered[i][j] -= sectors[0];
@@ -514,20 +514,19 @@ void Situation::updateCovered_Angle(Allocation& alloc, const int oldAngle) {
     }
 }
 
-void Situation::replaceAlloc(SubAlloc& subAlloc, std::list<Allocation>::iterator& oldAlloc, int mod) {
-    auto newIt = allocations.insert(oldAlloc, subAlloc.alloc);
+void Situation::replaceAlloc(SubAlloc& subAlloc, int mod) {
+    auto newIt = allocations.insert(subAlloc.oldAlloc, subAlloc.alloc);
     OF += subAlloc.OF_diff;
     numCovered += subAlloc.numCovered_diff;
     numTwiceCovered += subAlloc.numTwiceCovered_diff;
     iCost += subAlloc.icost_diff;
     if(mod == 0)
-        updateCovered_Pos(subAlloc.alloc, oldAlloc->position);
+        updateCovered_Pos(subAlloc.alloc, subAlloc.oldAlloc->position);
     else if(mod==1)
-        updateCovered_Guard(subAlloc.alloc, oldAlloc->guard);
+        updateCovered_Guard(subAlloc.alloc, subAlloc.oldAlloc->guard);
     else if(mod==2)
-        updateCovered_Angle(subAlloc.alloc, oldAlloc->angle);
-    allocations.erase(oldAlloc);
-    oldAlloc = newIt;
+        updateCovered_Angle(subAlloc.alloc, subAlloc.oldAlloc->angle);
+    allocations.erase(subAlloc.oldAlloc);
     subPossibilities.clear();
 }
 
@@ -538,11 +537,13 @@ void Situation::switchPos(std::list<Allocation>::iterator& alloc) {
     int guardidx = alloc->guardidx;
 
     for(const Observer& newPosition: dem->best_observers) {
-        if(rand()%100 >= 40) continue;
+        // if(rand()%100 >= 40) continue;
         if(newPosition.x == pos->x && newPosition.y == pos->y) continue;
 
         Allocation newAlloc(angle, guard, newPosition, guardidx);
-        subPossibilities.push_back(SubAlloc(*alloc, newAlloc, dem->nrows, covered));
+        subPossibilities.push_back(SubAlloc(alloc, newAlloc, dem->nrows, covered));
+        if(subPossibilities.rbegin()->OF_diff <= 0)
+            subPossibilities.pop_back();
     }
 }
 
@@ -562,7 +563,9 @@ void Situation::switchGuard(std::list<Allocation>::iterator& alloc) {
         // possibilities.push_back(NewAlloc(angle, possibility, *pos, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
 
         Allocation newAlloc(angle, newGuard, *pos, guardidx);
-        subPossibilities.push_back(SubAlloc(*alloc, newAlloc, dem->nrows, covered));
+        subPossibilities.push_back(SubAlloc(alloc, newAlloc, dem->nrows, covered));
+        if(subPossibilities.rbegin()->OF_diff <= 0)
+            subPossibilities.pop_back();
     }
 }
 
@@ -583,6 +586,8 @@ void Situation::switchAngle(std::list<Allocation>::iterator& alloc) {
         // possibilities.push_back(NewAlloc(angle, possibility, *pos, guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
 
         Allocation newAlloc(newAngle, guard, *pos, guardidx);
-        subPossibilities.push_back(SubAlloc(*alloc, newAlloc, dem->nrows, covered));
+        subPossibilities.push_back(SubAlloc(alloc, newAlloc, dem->nrows, covered));
+        if(subPossibilities.rbegin()->OF_diff <= 0)
+            subPossibilities.pop_back();
     }
 }
