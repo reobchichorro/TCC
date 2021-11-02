@@ -31,10 +31,21 @@ void Population::addIndividual(const Situation& indi) {
 }
 
 void Population::buildIndividual() {
-    // individuals[popSize] = Situation(*guard_types, *dem);
-    int n = 20 + rand()%10;
-    for(int i=0; i<n; i++) {
-        individuals[popSize].addRandomNewAlloc();
+    individuals[popSize] = Situation(*guard_types, *dem);
+    for(auto& pos: dem->best_observers) {
+        if(rand()%100 >= 5) continue;
+        int gidx = rand()%guard_types->size();
+        int angle = 0;
+        if(guard_types->at(gidx).angle != 360)
+            angle = 45*(rand()%8);
+        
+        GuardPos possibility(guard_types->at(gidx), pos, individuals[popSize].covered);
+
+        long long int numCovered_inc, numTwiceCovered_inc;
+        long long int OF_inc = possibility.calculateOF_inc(angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
+
+        NewAlloc toAdd(angle, possibility, pos, gidx, OF_inc, numCovered_inc, numTwiceCovered_inc);
+        individuals[popSize].insertNewAlloc(toAdd);
     }
     popSize++;
 }
@@ -54,14 +65,6 @@ void Population::fillCovered() {
 void Population::reproduce(Situation& child, const Situation& dad, const Situation& mom) {
     int dadRemaining = dad.allocations.size();
     int momRemaining = mom.allocations.size();
-    std::vector<bool> dadPicked(dadRemaining, false);
-    std::vector<bool> momPicked(momRemaining, false);
-    std::vector<bool> originParent;
-    std::vector<int> idxParent;
-    int i=0, j=0, k=0;
-    double best;
-    originParent.reserve(dadRemaining+momRemaining);
-    idxParent.reserve(dadRemaining+momRemaining);
 
     std::unordered_set<const Allocation*> parentAllocs;
 
@@ -102,6 +105,7 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
 
 void Population::mutate(Situation& child) {
     int mut = rand()%100;
+    mut = 100;
     if(mut >= 30) return;
     if(mut < 10) { // switch pos of guard
         std::list<SubAlloc>::iterator bestAlloc;

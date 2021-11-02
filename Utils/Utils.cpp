@@ -38,6 +38,8 @@ int getSector(int ii, int jj) {
             return 7;
     } else if(ii==0 && jj==0)
         return 8;
+    std::cerr << "Erro\n";
+    return -1;
 }
 
 void printToFile(const str& filepath, const str& toPrint) {
@@ -104,6 +106,19 @@ double ij::j() const { return jj + corner*0.5; };
 
 int ij::idxi() const { return ii; }
 int ij::idxj() const { return jj; }
+
+Block::Block(const int x, const int y) {
+    this->x = x - (x%size);
+    this->y = y - (y%size);
+}
+
+bool Block::operator==(const Block& other) const {
+    return this->x == other.x && this->y == other.y;
+}
+
+bool Block::operator!=(const Block& other) const {
+    return this->x != other.x || this->y != other.y;
+}
 
 
 Timer::Timer(const std::string &msg): st(msg) {reset();}

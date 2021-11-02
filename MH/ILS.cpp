@@ -63,17 +63,16 @@ void ILS::solve(int i) {
     s1g.insertPosRandomAllocs(s1);
 
     LS s1Star(*guard_types, *dem);
-    s1Star.one_neigh_until_localopt(s1, i, 0);
+    s1Star.until_local_opt(s1);
         
-    if(s1.OF > curr.OF) {
-        curr = s1;
-    } else if(rand()%100 >= 75) {
-        curr = s1;
-    }
-
     if(curr.OF > best.OF)
         best = curr;
     if(s1.OF > best.OF)
         best = s1;
 
+    if(s1.OF > curr.OF) {
+        curr = s1;
+    } else if(rand()%100 >= 75) {
+        curr = s1;
+    }
 }

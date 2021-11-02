@@ -84,6 +84,22 @@ public:
 };
 #endif
 
+#ifndef __BLOCK_
+#define __BLOCK_
+class Block {
+private:
+    int x;
+    int y;
+    int size = 30;
+
+public:
+    Block(const int x, const int y);
+
+    bool operator==(const Block& other) const;
+    bool operator!=(const Block& other) const;
+};
+#endif
+
 #ifndef __TIMER_
 #define __TIMER_
 // // Utils for measuring time, etc...

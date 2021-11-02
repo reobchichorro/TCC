@@ -60,7 +60,7 @@ void Greedy::solve(Situation& curr) {
 
 void Greedy::insertPosRandomAllocs(Situation& curr) {
     while(true) {
-        curr.random_newPossibilities(20);
+        curr.random_newPossibilities(50);
         auto bestAlloc = std::min_element(curr.newPossibilities.begin(), curr.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
         
         if(curr.newPossibilities.empty() || bestAlloc->OF_inc < 0.0)
@@ -123,8 +123,28 @@ void LS::one_neigh_until_localopt(Situation& curr, int neighborhood, int improv)
             }
         }
     }
+}
 
+void LS::until_local_opt(Situation& curr) {
+    bool isLocalOpt = false;
+    while(!isLocalOpt) {
+        isLocalOpt = true;
+        std::list<SubAlloc>::iterator bestAlloc;
+        std::list<Allocation>::iterator oldAlloc;
 
+        int i = 0;
+        for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
+            curr.switchAll_PosBlock(alloc);
+        }
+        bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
+        if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
+            curr.subPossibilities.clear();
+        }
+        else {
+            isLocalOpt == false;
+            curr.replaceAlloc(*bestAlloc, 3);
+        }
+    }
 }
 
 void LS::mix1(Situation& curr) {

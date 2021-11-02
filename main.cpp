@@ -11,7 +11,7 @@
 #include "Utils/Utils.h"
 
 typedef std::string str;
-int version = 2;
+int version = 3;
 
 str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 
@@ -93,8 +93,9 @@ int main(int argc, char** argv) {
     Situation currSit(guard_types, dem);
     Greedy s0(guard_types, dem);
     s0.solve(currSit);
+
     LS sStar(guard_types, dem);
-    sStar.one_neigh_until_localopt(currSit, 1, 0);
+    sStar.until_local_opt(currSit);
     str filepath = outputPath + "GreedyLS/" + std::to_string(tGreedyLS.getTimeNow()) + ".csv";
     currSit.print(filepath);
     tGreedyLS.~Timer();
