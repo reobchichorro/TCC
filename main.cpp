@@ -64,7 +64,7 @@ void read_guardtypelist_file(const str& path, const str& filename, std::vector<G
 }
 
 int main(int argc, char** argv) {
-    srand(4);
+    srand(3);
     if(argc != 3) 
         return 1;
     
@@ -83,6 +83,10 @@ int main(int argc, char** argv) {
     dem.fill_best_observers(site_folder, input.test_case_name, input.roi_folder, guard_radii, guard_heights);
 
     str outputPath = "Outputs/" + std::to_string(version) + "/" + filename + "/";
+    std::filesystem::create_directory(outputPath);
+    std::filesystem::create_directory(outputPath+"GreedyLS/");
+    std::filesystem::create_directory(outputPath+"ILS/");
+    std::filesystem::create_directory(outputPath+"GA/");
 
     str msg = "Greedy+LS";
     Timer tGreedyLS(msg);
@@ -90,42 +94,46 @@ int main(int argc, char** argv) {
     Greedy s0(guard_types, dem);
     s0.solve(currSit);
     LS sStar(guard_types, dem);
-    sStar.only_one_neigh(currSit, 1, 0);
+    sStar.one_neigh_until_localopt(currSit, 1, 0);
     str filepath = outputPath + "GreedyLS/" + std::to_string(tGreedyLS.getTimeNow()) + ".csv";
     currSit.print(filepath);
     tGreedyLS.~Timer();
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << " a\n";
+    currSit.calculate_OF();
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << " b\n";
+
 
     Timer tILS("ILS");
     ILS test(guard_types, dem);
     int it = 0;
-    int printTime = 0;
-    while(tILS.getTimeNow() < 600) {
+    while(tILS.getTimeNow() < 450) {
         test.solve(currSit, it%3);
         it++;
-        if (tILS.getTimeNow() > printTime) {
-            filepath = outputPath + "ILS/" + std::to_string(printTime) + ".csv";
-            currSit.print(filepath);
-            printTime += 30;
-        }
+        std::cout << it << " " << tILS.getTimeNow() << "\n";
+        filepath = outputPath + "ILS/" + std::to_string(tILS.getTimeNow()) + ".csv";
+        currSit.print(filepath);
     }
+    
     tILS.~Timer();
+    currSit.calculate_OF();
+    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
 
     msg = "GA";
     Timer tGA(msg);
     GA teste(guard_types, dem);
-    printTime = 0;
+    it = 0;
     str toPrint = ""; teste.best.print(toPrint);
-    while(tGA.getTimeNow() < 600) {
+    while(tGA.getTimeNow() < 450) {
         // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
         teste.createNewGeneration();
-
-        if (tGA.getTimeNow() > printTime) {
-            filepath = outputPath + "GA/" + std::to_string(printTime) + ".csv";
-            teste.best.print(filepath);
-            printTime += 30;
-        }
+        it++;
+        std::cout << it << " " << tGA.getTimeNow() << "\n";
+        filepath = outputPath + "GA/" + std::to_string(tGA.getTimeNow()) + ".csv";
+        teste.best.print(filepath);
     }
     tGA.~Timer();
-    // std::cout << 4*teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
+
+    teste.best.calculate_OF();
+    std::cout << teste.best.numCovered << "\t" << teste.best.numTwiceCovered << "\t" << teste.best.iCost << "\t" << teste.best.OF << "\n";
 
 }

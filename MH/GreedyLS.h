@@ -48,7 +48,8 @@ public:
 
     LS(std::vector<GuardType>& guard_types, Terrain& dem);
     
-    void only_one_neigh(Situation& curr, int neighborhood, int improv);
+    // void only_one_neigh(Situation& curr, int neighborhood, int improv);
+    void one_neigh_until_localopt(Situation& curr, int neighborhood, int improv);
     void mix1(Situation& curr);
 };
 #endif

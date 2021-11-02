@@ -54,7 +54,7 @@ public:
     GuardPos(const GuardType& guard_type, const int oldAngle, const Observer& position, const std::vector<std::vector<short int> >& covered);
 
     long long int calculateOF_inc(const int angle, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
-    long long int calculateOF_incGuard(const int angle, long long int oldICost, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
+    long long int calculateOF_incGuard(const int angle, const GuardType* oldGuard, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
     long long int calculateOF_incAngle(const int oldAngle, const int newAngle, long long int& numCovered_diff, long long int& numTwiceCovered_diff, int nrows, bool hasOld);
 };
 #endif

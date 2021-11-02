@@ -14,6 +14,7 @@
 #include "Terrain.h"
 #include "GuardType.h"
 #include "AllocGPos.h"
+#include "SubAlloc.h"
 
 #define eps 1e-6
 #define all(v) v.begin(),v.end()
@@ -50,7 +51,8 @@ public:
     long long int iCost;
     long long int mCost;
 
-    std::list<NewAlloc> possibilities;
+    std::list<NewAlloc> newPossibilities;
+    std::list<SubAlloc> subPossibilities;
 
     Situation();
     Situation(std::vector<GuardType>& guard_types, Terrain& dem);
@@ -58,16 +60,17 @@ public:
     long double calculate_OF();
     void print(str& toPrint);
 
-    bool calculate_possibilities();
+    bool calculate_newPossibilities();
     void updateCovered(Allocation& alloc);
     void insertNewAlloc(NewAlloc& newAlloc);
+    void switchSubAlloc(SubAlloc& subAlloc);
 
     bool addRandomNewAlloc();
 
     void updateCovered_Pos(Allocation& alloc, const Observer* oldPos);
     void updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard);
     void updateCovered_Angle(Allocation& alloc, const int oldAngle);
-    void replaceAlloc(NewAlloc& newAlloc, std::list<Allocation>::iterator& oldAlloc, int mod);
+    void replaceAlloc(SubAlloc& subAlloc, int mod);
     void switchPos(std::list<Allocation>::iterator& alloc);
     void switchGuard(std::list<Allocation>::iterator& alloc);
     void switchAngle(std::list<Allocation>::iterator& alloc);

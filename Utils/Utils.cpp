@@ -15,6 +15,31 @@
 
 typedef std::string str;
 
+int getSector(int ii, int jj) {
+    if(ii <= 0 && jj > 0) {
+        if(ii > -jj)
+            return 0;
+        else
+            return 1;
+    } else if(ii < 0 && jj <= 0) {
+        if(ii < jj)
+            return 2;
+        else
+            return 3;
+    } else if(ii >= 0 && jj < 0) {
+        if(ii < -jj)
+            return 4;
+        else
+            return 5;
+    } else if(ii > 0 && jj >= 0) {
+        if(ii > jj)
+            return 6;
+        else
+            return 7;
+    } else if(ii==0 && jj==0)
+        return 8;
+}
+
 void printToFile(const str& filepath, const str& toPrint) {
     std::ofstream file(filepath);
     file << toPrint;
