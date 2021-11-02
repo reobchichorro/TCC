@@ -18,13 +18,15 @@
 #include "GreedyLS.h"
 #include "ILS.h"
 
-ILS::ILS(std::vector<GuardType>& guard_types, Terrain& dem) {
+ILS::ILS(std::vector<GuardType>& guard_types, Terrain& dem, Situation& curr) {
     this->guard_types = &guard_types;
     this->dem = &dem;
+    this->curr = curr;
+    this->best = curr;
 }
 
-void ILS::perturb(Situation& sStar, Situation& s1) {
-    int total = sStar.allocations.size();
+void ILS::perturb(Situation& s1) {
+    int total = curr.allocations.size();
     int num_to_keep = percent_to_keep*total;
     std::unordered_set<int> to_keep;
 
@@ -36,7 +38,7 @@ void ILS::perturb(Situation& sStar, Situation& s1) {
     }
 
     int i=0;
-    for(auto it = sStar.allocations.begin(); it != sStar.allocations.end(); it++, i++) {
+    for(auto it = curr.allocations.begin(); it != curr.allocations.end(); it++, i++) {
         if(to_keep.find(i) != to_keep.end()) {
             GuardPos gPos(*(it->guard), *(it->position), s1.covered);
 
@@ -49,22 +51,29 @@ void ILS::perturb(Situation& sStar, Situation& s1) {
     }
 }
 
-void ILS::solve(Situation& curr, int i) {
+void ILS::solve(int i) {
     str toPrint = "";
 
     long long int a, b;
 
     Situation s1(*guard_types, *dem);
-    perturb(curr, s1);
+    perturb(s1);
 
     Greedy s1g(*guard_types, *dem);
-    s1g.solve(s1);
+    s1g.insertPosRandomAllocs(s1);
 
     LS s1Star(*guard_types, *dem);
     s1Star.one_neigh_until_localopt(s1, i, 0);
         
     if(s1.OF > curr.OF) {
         curr = s1;
+    } else if(rand()%100 >= 75) {
+        curr = s1;
     }
+
+    if(curr.OF > best.OF)
+        best = curr;
+    if(s1.OF > best.OF)
+        best = s1;
 
 }

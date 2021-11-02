@@ -58,50 +58,22 @@ void Greedy::solve(Situation& curr) {
     while(advance_if_OF_gt_1(curr));
 }
 
+void Greedy::insertPosRandomAllocs(Situation& curr) {
+    while(true) {
+        curr.random_newPossibilities(20);
+        auto bestAlloc = std::min_element(curr.newPossibilities.begin(), curr.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+        
+        if(curr.newPossibilities.empty() || bestAlloc->OF_inc < 0.0)
+            break;
+
+        curr.insertNewAlloc(*bestAlloc);
+    }
+}
+
 LS::LS(std::vector<GuardType>& guard_types, Terrain& dem) {
     this->guard_types = &guard_types;
     this->dem = &dem;
 }
-
-// void LS::only_one_neigh(Situation& curr, int neighborhood, int improv) {
-//     if (neighborhood == 0) { //switch the pos of guard
-//         int i = 0;
-//         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
-//             curr.switchPos(alloc);
-//             auto bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
-//             if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
-//                 curr.subPossibilities.clear();
-//             }
-//             else {
-//                 curr.replaceAlloc(*bestAlloc, alloc, 0);
-//             }
-//         }
-//     } else if (neighborhood == 1) { //switch the guard in pos
-//         int i = 0;
-//         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
-//             curr.switchGuard(alloc);
-//             auto bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
-//             if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
-//                 curr.subPossibilities.clear();
-//             }
-//             else {
-//                 curr.replaceAlloc(*bestAlloc, alloc, 1);
-//             }
-//         }
-//     } else if (neighborhood == 2) { // switch angle of guard
-//         int i = 0;
-//         for(auto alloc = curr.allocations.begin(); alloc != curr.allocations.end(); alloc++, i++) {
-//             curr.switchAngle(alloc);
-//             auto bestAlloc = std::min_element(curr.subPossibilities.begin(), curr.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
-//             if(curr.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
-//                 curr.subPossibilities.clear();
-//             }
-//             else {
-//                 curr.replaceAlloc(*bestAlloc, alloc, 2);
-//             }
-//         }
-//     }
-// }
 
 void LS::one_neigh_until_localopt(Situation& curr, int neighborhood, int improv) {
     bool isLocalOpt = false;

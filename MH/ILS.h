@@ -28,10 +28,12 @@ public:
     std::vector<GuardType>* guard_types;
     double percent_to_keep = 0.50;
     Terrain* dem;
+    Situation curr;
+    Situation best;
 
-    ILS(std::vector<GuardType>& guard_types, Terrain& dem);
+    ILS(std::vector<GuardType>& guard_types, Terrain& dem, Situation& curr);
 
-    void perturb(Situation& sStar, Situation& s1);
-    void solve(Situation& curr, int i);
+    void perturb(Situation& s1);
+    void solve(int i);
 };
 #endif

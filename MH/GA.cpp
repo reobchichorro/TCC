@@ -32,7 +32,8 @@ void Population::addIndividual(const Situation& indi) {
 
 void Population::buildIndividual() {
     // individuals[popSize] = Situation(*guard_types, *dem);
-    for(int i=0; i<25; i++) {
+    int n = 20 + rand()%10;
+    for(int i=0; i<n; i++) {
         individuals[popSize].addRandomNewAlloc();
     }
     popSize++;
@@ -90,71 +91,13 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
         }
 
         auto bestAlloc = std::min_element(child.newPossibilities.begin(), child.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-        if(bestAlloc->OF_inc < 0 && child.allocations.size() >= 25)
+        if(bestAlloc->OF_inc < 0 && child.allocations.size() >= std::max(dadRemaining, momRemaining))
             break;
         else if(bestOF_inc == bestAlloc->OF_inc) {
             child.insertNewAlloc(*bestAlloc);
             parentAllocs.erase(bestParentAlloc);
-        } else {
-            std::cerr << "nani the fuck\n";
         }
     }
-
-    // while((dadRemaining > 0 || momRemaining > 0) && child.allocations.size() < dadPicked.size()) {
-    //     i=0;
-    //     for(auto& alloc : dad.allocations) {
-    //         if(dadPicked[i]) {
-    //             i++;
-    //             continue;   
-    //         }
-
-    //         GuardPos possibility(*alloc.guard, *alloc.position, child.covered);
-    //         long long int numCovered_inc, numTwiceCovered_inc;
-    //         long long int OF_inc = possibility.calculateOF_inc(alloc.angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
-
-    //         child.newPossibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, alloc.guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
-    //         originParent.push_back(false);
-    //         idxParent.push_back(i);
-    //         i++;
-    //     }
-
-    //     j=0;
-    //     for(auto& alloc : mom.allocations) {
-    //         if(momPicked[j]) {
-    //             j++;
-    //             continue;   
-    //         }
-
-    //         GuardPos possibility(*alloc.guard, *alloc.position, child.covered);
-    //         long long int numCovered_inc, numTwiceCovered_inc;
-    //         long long int OF_inc = possibility.calculateOF_inc(alloc.angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
-
-    //         child.newPossibilities.push_back(NewAlloc(alloc.angle, possibility, *alloc.position, alloc.guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
-    //         originParent.push_back(true);
-    //         idxParent.push_back(j);
-    //         j++;
-    //     }
-
-    //     auto bestAlloc = std::min_element(child.newPossibilities.begin(), child.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-
-    //     k=0;
-    //     for(auto& newAlloc : child.newPossibilities) {
-    //         if(newAlloc.OF_inc == bestAlloc->OF_inc) {
-    //             break;
-    //         }
-    //         k++;
-    //     }
-    //     if(originParent[k]) {
-    //         momPicked[idxParent[k]] = true;
-    //         momRemaining--;
-    //     } else {
-    //         dadPicked[idxParent[k]] = true;
-    //         dadRemaining--;
-    //     }
-    //     child.insertNewAlloc(*bestAlloc);
-    //     originParent.clear();
-    //     idxParent.clear();
-    // }
 }
 
 void Population::mutate(Situation& child) {

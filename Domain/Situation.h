@@ -60,7 +60,9 @@ public:
     long double calculate_OF();
     void print(str& toPrint);
 
+    
     bool calculate_newPossibilities();
+    void random_newPossibilities(int sampleSize);
     void updateCovered(Allocation& alloc);
     void insertNewAlloc(NewAlloc& newAlloc);
     void switchSubAlloc(SubAlloc& subAlloc);

@@ -128,6 +128,28 @@ bool Situation::calculate_newPossibilities() {
     return !newPossibilities.empty();
 }
 
+void Situation::random_newPossibilities(int sampleSize) {
+    long long int OF_inc;
+    long long int numCovered_inc;
+    long long int numTwiceCovered_inc;
+
+    for(int i=0; i<sampleSize; i++) {
+        const int posidx = rand()%dem->best_observers.size();
+        const int guardidx = rand()%guard_types->size();
+        GuardPos possibility(guard_types->at(guardidx), dem->best_observers[posidx], covered);
+        if(guard_types->at(guardidx).angle == 360) {
+            OF_inc = possibility.calculateOF_inc(0, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
+            newPossibilities.push_back(NewAlloc(0, possibility, dem->best_observers[posidx], guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+        }
+        else {
+            for(int angle: angles) {
+                OF_inc = possibility.calculateOF_inc(angle, numCovered_inc, numTwiceCovered_inc, dem->nrows, false);
+                newPossibilities.push_back(NewAlloc(angle, possibility, dem->best_observers[posidx], guardidx, OF_inc, numCovered_inc, numTwiceCovered_inc));
+            }
+        }
+    }
+}
+
 void Situation::updateCovered(Allocation& alloc) {
     const GuardType* guard = alloc.guard;
     const Observer* position = alloc.position;

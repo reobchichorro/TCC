@@ -11,7 +11,7 @@
 #include "Utils/Utils.h"
 
 typedef std::string str;
-int version = 1;
+int version = 2;
 
 str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 
@@ -104,19 +104,19 @@ int main(int argc, char** argv) {
 
 
     Timer tILS("ILS");
-    ILS test(guard_types, dem);
+    ILS test(guard_types, dem, currSit);
     int it = 0;
     while(tILS.getTimeNow() < 450) {
-        test.solve(currSit, it%3);
+        test.solve(it%3);
         it++;
         std::cout << it << " " << tILS.getTimeNow() << "\n";
         filepath = outputPath + "ILS/" + std::to_string(tILS.getTimeNow()) + ".csv";
-        currSit.print(filepath);
+        test.best.print(filepath);
     }
     
     tILS.~Timer();
-    currSit.calculate_OF();
-    std::cout << currSit.numCovered << "\t" << currSit.numTwiceCovered << "\t" << currSit.iCost << "\t" << currSit.OF << "\n";
+    test.best.calculate_OF();
+    std::cout << test.best.numCovered << "\t" << test.best.numTwiceCovered << "\t" << test.best.iCost << "\t" << test.best.OF << "\n";
 
     msg = "GA";
     Timer tGA(msg);

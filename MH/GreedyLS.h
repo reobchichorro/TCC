@@ -35,6 +35,7 @@ public:
     void until100(Situation& curr);
     void spendAllGuards(Situation& curr);
     void solve(Situation& curr);
+    void insertPosRandomAllocs(Situation& curr);
 };
 #endif
 
