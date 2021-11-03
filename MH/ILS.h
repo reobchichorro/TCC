@@ -26,7 +26,7 @@ typedef std::string str;
 class ILS {
 public:
     std::vector<GuardType>* guard_types;
-    double percent_to_keep = 0.66;
+    double percent_to_keep = 0.40;
     Terrain* dem;
     Situation curr;
     Situation best;

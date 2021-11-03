@@ -109,7 +109,10 @@ float Population::temp() {
 
 void Population::mutate(Situation& child) {
     int mut = rand()%100;
-    if(mut<30) {
+    int c1 = 30;
+    int c2 = c1 + 2*it;
+    int c3 = c2 + 10-it;
+    if(mut<c1) {
         int i=0;
         for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
             child.checkRemoveAlloc(alloc);
@@ -118,13 +121,13 @@ void Population::mutate(Situation& child) {
                 break;
             }
         }
-    } else if(mut<35) {
-        child.random_newPossibilities(10);
+    } else if(mut<c2) {
+        child.random_newPossibilities(10+it);
         auto bestAlloc = std::min_element(child.newPossibilities.begin(), child.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
         
         if(!child.newPossibilities.empty() && bestAlloc->OF_inc >= 0.0)
             child.insertNewAlloc(*bestAlloc);
-    } else if(mut<40) {
+    } else if(mut<c3) {
         std::list<Allocation>::iterator alloc = child.allocations.begin();
         for(; alloc != child.allocations.end(); alloc++) {
             child.checkRemoveAlloc(alloc);
