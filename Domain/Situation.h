@@ -73,11 +73,15 @@ public:
     void updateCovered_Guard(Allocation& alloc, const GuardType* oldGuard);
     void updateCovered_Angle(Allocation& alloc, const int oldAngle);
     void updateCovered_All(Allocation& newAlloc, const Allocation& oldAlloc);
+    void updateCovered_Remove(Allocation& oldAlloc);
+
     void replaceAlloc(SubAlloc& subAlloc, int mod);
+    void removeAlloc(SubAlloc& subAlloc);
 
     void switchPos(std::list<Allocation>::iterator& alloc);
     void switchGuard(std::list<Allocation>::iterator& alloc);
     void switchAngle(std::list<Allocation>::iterator& alloc);
     void switchAll_PosBlock(std::list<Allocation>::iterator& alloc);
+    void checkRemoveAlloc(std::list<Allocation>::iterator& alloc);
 };
 #endif

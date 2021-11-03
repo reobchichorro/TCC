@@ -64,6 +64,8 @@ void ILS::solve(int i) {
 
     LS s1Star(*guard_types, *dem);
     s1Star.until_local_opt(s1);
+
+    std::cerr << best.OF << " " << curr.OF << " " << s1.OF << "\n";
         
     if(curr.OF > best.OF)
         best = curr;

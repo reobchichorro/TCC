@@ -11,7 +11,7 @@
 #include "Utils/Utils.h"
 
 typedef std::string str;
-int version = 3;
+int version = 4;
 
 str site_folder = "/home/reobc/Documents/Disciplinas/TCC/wrf/c/site/";
 

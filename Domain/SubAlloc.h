@@ -31,6 +31,7 @@ public:
     long long int icost_diff;
 
     SubAlloc(std::list<Allocation>::iterator& oldAlloc, Allocation& newAlloc, const int nrows, const std::vector<std::vector<short int>>& covered);
+    SubAlloc(std::list<Allocation>::iterator& allocToRemove, const int nrows, const std::vector<std::vector<short int>>& covered);
     bool operator<(const SubAlloc& other) const;
     long double operator-(const SubAlloc& other);
 };

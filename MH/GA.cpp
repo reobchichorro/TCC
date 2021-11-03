@@ -105,49 +105,35 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
 
 void Population::mutate(Situation& child) {
     int mut = rand()%100;
-    mut = 100;
-    if(mut >= 30) return;
-    if(mut < 10) { // switch pos of guard
+    if(mut<30) {
+        int i=0;
+        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
+            child.checkRemoveAlloc(alloc);
+            if(child.subPossibilities.crbegin()->OF_diff > 0) {
+                child.removeAlloc(child.subPossibilities.back());
+                break;
+            }
+        }
+    } else if(mut<35) {
+        child.random_newPossibilities(10);
+        auto bestAlloc = std::min_element(child.newPossibilities.begin(), child.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
+        
+        if(!child.newPossibilities.empty() && bestAlloc->OF_inc >= 0.0)
+            child.insertNewAlloc(*bestAlloc);
+    } else if(mut<40) {
         std::list<SubAlloc>::iterator bestAlloc;
         std::list<Allocation>::iterator oldAlloc;
+
         int i = 0;
         for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
-            child.switchPos(alloc);
+            child.switchAll_PosBlock(alloc);
         }
         bestAlloc = std::min_element(child.subPossibilities.begin(), child.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
         if(child.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
             child.subPossibilities.clear();
         }
         else {
-            child.replaceAlloc(*bestAlloc, 0);
-        }
-    } else if(mut < 20) { // switch guard in pos
-        std::list<SubAlloc>::iterator bestAlloc;
-        std::list<Allocation>::iterator oldAlloc;
-        int i = 0;
-        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
-            child.switchGuard(alloc);
-        }
-        bestAlloc = std::min_element(child.subPossibilities.begin(), child.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
-        if(child.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
-            child.subPossibilities.clear();
-        }
-        else {
-            child.replaceAlloc(*bestAlloc, 1);
-        }
-    } else { // switch angle of guard
-        std::list<SubAlloc>::iterator bestAlloc;
-        std::list<Allocation>::iterator oldAlloc;
-        int i = 0;
-        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
-            child.switchAngle(alloc);
-        }
-        bestAlloc = std::min_element(child.subPossibilities.begin(), child.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
-        if(child.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
-            child.subPossibilities.clear();
-        }
-        else {
-            child.replaceAlloc(*bestAlloc, 2);
+            child.replaceAlloc(*bestAlloc, 3);
         }
     }
 }

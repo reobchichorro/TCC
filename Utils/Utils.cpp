@@ -107,9 +107,10 @@ double ij::j() const { return jj + corner*0.5; };
 int ij::idxi() const { return ii; }
 int ij::idxj() const { return jj; }
 
-Block::Block(const int x, const int y) {
+Block::Block(const int x, const int y, const int size) {
     this->x = x - (x%size);
     this->y = y - (y%size);
+    this->size = size;
 }
 
 bool Block::operator==(const Block& other) const {

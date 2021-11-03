@@ -90,10 +90,10 @@ class Block {
 private:
     int x;
     int y;
-    int size = 30;
+    int size;
 
 public:
-    Block(const int x, const int y);
+    Block(const int x, const int y, const int size=30);
 
     bool operator==(const Block& other) const;
     bool operator!=(const Block& other) const;

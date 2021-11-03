@@ -60,7 +60,7 @@ void Greedy::solve(Situation& curr) {
 
 void Greedy::insertPosRandomAllocs(Situation& curr) {
     while(true) {
-        curr.random_newPossibilities(50);
+        curr.random_newPossibilities(150);
         auto bestAlloc = std::min_element(curr.newPossibilities.begin(), curr.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
         
         if(curr.newPossibilities.empty() || bestAlloc->OF_inc < 0.0)

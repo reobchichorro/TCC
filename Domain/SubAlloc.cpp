@@ -149,6 +149,67 @@ SubAlloc::SubAlloc(std::list<Allocation>::iterator& oldAlloc, Allocation& newAll
     // }
 }
 
+SubAlloc::SubAlloc(std::list<Allocation>::iterator& allocToRemove, const int nrows, const std::vector<std::vector<short int>>& covered) {
+    this->oldAlloc = allocToRemove;
+    this->OF_diff = 0;
+    this->numCovered_diff = 0;
+    this->numTwiceCovered_diff = 0;
+    this->icost_diff = -allocToRemove->guard->icost;
+
+    //Setting up heights
+    int oh = allocToRemove->guard->height;
+
+    //Setting up radii
+    int oldRadius = allocToRemove->guard->radius*nrows/100;
+
+    int oi, oj;
+    bool insideOld;
+
+    //Setting up angles
+    int angle_min = allocToRemove->angle/45;
+    int angle_max = ((allocToRemove->angle + allocToRemove->guard->angle)%360)/45;
+    std::vector<bool> oldSectors(8, false);
+    if(angle_min < angle_max) {
+        for(int idx = angle_min; idx<angle_max; idx++)
+            oldSectors[idx] = true; 
+    } else {
+        for(int idx = angle_min; idx<8; idx++)
+            oldSectors[idx] = true;
+        for(int idx = 0; idx<angle_max; idx++)
+            oldSectors[idx] = true;
+    }
+
+    int oldSector;
+    bool oldAngle;
+
+    bool wasCovering;
+
+    int start = std::max(0, allocToRemove->position->x - oldRadius);
+    int stop = std::min((int)covered.size()-1, allocToRemove->position->x + oldRadius);
+    int i = start;
+
+    for(int line=0; line<allocToRemove->position->limits_row.at(allocToRemove->guard->radius).size(); line++, i++) {
+        for(int j=allocToRemove->position->limits_row.at(allocToRemove->guard->radius)[line].first; j<=allocToRemove->position->limits_row.at(allocToRemove->guard->radius)[line].second; j++) {
+            oi = i - allocToRemove->position->x; oj = j - allocToRemove->position->y;
+
+            insideOld = oi*oi + oj*oj <= oldRadius*oldRadius;
+
+            oldSector = getSector(oi, oj);
+            oldAngle = (oldSector != 8) ? oldSectors[oldSector] : true;
+
+            wasCovering = (covered[i][j] > 0) && insideOld && oldAngle && allocToRemove->position->shed.at(oh)[i][j];
+
+            if(covered[i][j] == 1 && wasCovering)
+                numCovered_diff--;
+            else if(covered[i][j] == 2 && wasCovering)
+                numTwiceCovered_diff--;
+        }
+    }
+
+    OF_diff = 4*numCovered_diff + numTwiceCovered_diff - icost_diff;
+    this->alloc = Allocation();
+}
+
 bool SubAlloc::operator<(const SubAlloc& other) const {
     return this->OF_diff < other.OF_diff;
 }
