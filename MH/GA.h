@@ -30,9 +30,11 @@ public:
 
     std::vector<Situation> individuals;
     int popSize;
+    int it;
 
+    float temp();
 
-    Population(std::vector<GuardType>& guard_types, Terrain& dem);
+    Population(std::vector<GuardType>& guard_types, Terrain& dem, int it);
     void addIndividual(const Situation& indi);
     void buildIndividual();
     void generatePop();
@@ -59,6 +61,8 @@ public:
     Population* children;
 
     Situation best;
+
+    int it;
 
     GA(std::vector<GuardType>& guard_types, Terrain& dem);
     void createNewGeneration();

@@ -23,6 +23,7 @@ ILS::ILS(std::vector<GuardType>& guard_types, Terrain& dem, Situation& curr) {
     this->dem = &dem;
     this->curr = curr;
     this->best = curr;
+    this->it = 0;
 }
 
 void ILS::perturb(Situation& s1) {
@@ -60,7 +61,7 @@ void ILS::solve(int i) {
     perturb(s1);
 
     Greedy s1g(*guard_types, *dem);
-    s1g.insertPosRandomAllocs(s1);
+    s1g.solve(s1);
 
     LS s1Star(*guard_types, *dem);
     s1Star.until_local_opt(s1);
@@ -77,4 +78,6 @@ void ILS::solve(int i) {
     } else if(rand()%100 >= 75) {
         curr = s1;
     }
+
+    it++;
 }

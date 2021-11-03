@@ -18,11 +18,12 @@
 #include "GreedyLS.h"
 #include "GA.h"
 
-Population::Population(std::vector<GuardType>& guard_types, Terrain& dem) {
+Population::Population(std::vector<GuardType>& guard_types, Terrain& dem, int it) {
     this->guard_types = &guard_types;
     this->dem = &dem;
     this->individuals = std::vector<Situation>(36, Situation(guard_types, dem));
     popSize = 0;
+    this->it = it;
 }
 
 void Population::addIndividual(const Situation& indi) {
@@ -94,13 +95,16 @@ void Population::reproduce(Situation& child, const Situation& dad, const Situati
         }
 
         auto bestAlloc = std::min_element(child.newPossibilities.begin(), child.newPossibilities.end(), [](const NewAlloc& a, const NewAlloc& b){return b < a;});
-        if(bestAlloc->OF_inc < 0 && child.allocations.size() >= std::max(dadRemaining, momRemaining))
-            break;
-        else if(bestOF_inc == bestAlloc->OF_inc) {
+        if(bestOF_inc == bestAlloc->OF_inc && (bestAlloc->OF_inc > 0 || rand()%1000 < 1000*exp(bestAlloc->OF_inc/temp()))) {
             child.insertNewAlloc(*bestAlloc);
-            parentAllocs.erase(bestParentAlloc);
         }
+        parentAllocs.erase(bestParentAlloc);
     }
+    std::cerr << child.allocations.size() << " " << child.OF << "; ";
+}
+
+float Population::temp() {
+    return 100000*exp(-it);
 }
 
 void Population::mutate(Situation& child) {
@@ -121,19 +125,14 @@ void Population::mutate(Situation& child) {
         if(!child.newPossibilities.empty() && bestAlloc->OF_inc >= 0.0)
             child.insertNewAlloc(*bestAlloc);
     } else if(mut<40) {
-        std::list<SubAlloc>::iterator bestAlloc;
-        std::list<Allocation>::iterator oldAlloc;
-
-        int i = 0;
-        for(auto alloc = child.allocations.begin(); alloc != child.allocations.end(); alloc++, i++) {
-            child.switchAll_PosBlock(alloc);
-        }
-        bestAlloc = std::min_element(child.subPossibilities.begin(), child.subPossibilities.end(), [](const SubAlloc& a, const SubAlloc& b){return b < a;});
-        if(child.subPossibilities.empty() || bestAlloc->OF_diff <= 0) {
-            child.subPossibilities.clear();
-        }
-        else {
-            child.replaceAlloc(*bestAlloc, 3);
+        std::list<Allocation>::iterator alloc = child.allocations.begin();
+        for(; alloc != child.allocations.end(); alloc++) {
+            child.checkRemoveAlloc(alloc);
+            if(child.subPossibilities.crbegin()->OF_diff > 0) {
+                alloc--;
+                child.removeAlloc(child.subPossibilities.back());
+                break;
+            }
         }
     }
 }
@@ -144,12 +143,14 @@ void Population::crossover(const Population& oldGen) {
         mutate(individuals[i]);
         popSize++;
     }    
+    std::cerr << "\n";
 }
 
 GA::GA(std::vector<GuardType>& guard_types, Terrain& dem) {
     this->guard_types = &guard_types;
     this->dem = &dem;
-    this->curr = new Population(guard_types, dem);
+    this->it = 0;
+    this->curr = new Population(guard_types, dem, it);
     this->curr->generatePop();
     this->best = *std::min_element(curr->individuals.begin(), curr->individuals.end(), [](const Situation& a, const Situation& b){return b.OF < a.OF;});
     this->children = NULL;
@@ -157,7 +158,7 @@ GA::GA(std::vector<GuardType>& guard_types, Terrain& dem) {
 }
 
 void GA::createNewGeneration() {
-    this->children = new Population(*guard_types, *dem);
+    this->children = new Population(*guard_types, *dem, it);
     // this->children->fillCovered();
     this->children->crossover(*(this->curr));
 
@@ -173,7 +174,7 @@ void GA::createNewGeneration() {
         this->best = this->children->individuals[bestNew[0]];
     }
 
-    this->improved = new Population(*guard_types, *dem);
+    this->improved = new Population(*guard_types, *dem, it);
     int i=0, j=0;
     long double oldOF, newOF;
     while(this->improved->popSize < 36) {
@@ -192,4 +193,5 @@ void GA::createNewGeneration() {
     delete this->children;
     this->curr = this->improved;
     this->improved = NULL;
+    it++;
 }
